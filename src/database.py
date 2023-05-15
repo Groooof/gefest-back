@@ -3,25 +3,10 @@ import typing as tp
 import asyncpg
 
 
-def get_postgres_dsn(user: str, password: str, host: str, port: str, db: str,
-                     sa_driver: str = None, sa_dialect: str = None):
-    """
-    Генерация ссылки для подключения к бд.
-    """
-    dsn_without_prefix = f'{user}:{password}@{host}:{port}/{db}'
-
-    if sa_driver is None and sa_dialect is None:
-        base_prefix = 'postgres://'
-        return base_prefix + dsn_without_prefix
-
-    sa_prefix = f'{sa_driver}+{sa_dialect}://'
-    return sa_prefix + dsn_without_prefix
-
-
 class IDatabase(metaclass=ABCMeta):
 
     @abstractmethod
-    async def startup(self, user: str, password: str, host: str, port: str, db: str) -> None:
+    async def startup(self, dsn: str) -> None:
         pass
 
     @abstractmethod
@@ -37,11 +22,11 @@ class ASPGDatabase(IDatabase):
     def __init__(self):
         self.pool: tp.Optional[asyncpg.Pool] = None
 
-    async def startup(self, user: str, password: str, host: str, port: str, db: str) -> None:
+    async def startup(self, dsn: str) -> None:
         """
         Создание асинхронного пула подключений к бд.
         """
-        self.pool = await asyncpg.create_pool(get_postgres_dsn(user, password, host, port, db), timeout=5)
+        self.pool = await asyncpg.create_pool(dsn, timeout=5)
 
     async def shutdown(self) -> None:
         """

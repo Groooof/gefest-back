@@ -31,6 +31,7 @@ class JWTEnv(BaseEnv):
     
 
 postgres_env = PostgresEnv()
+POSTGRES_DSN = os.environ.get('DATABASE_URL')
 jwt_env = JWTEnv()
 
 JWT_ALG = 'HS256'

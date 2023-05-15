@@ -1,6 +1,7 @@
-from pydantic import BaseSettings
 import datetime as dt
-import pathlib
+import os
+
+from pydantic import BaseSettings
 
 
 class BaseEnv(BaseSettings):

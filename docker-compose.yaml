@@ -1,0 +1,36 @@
+version: "3"
+
+volumes:
+  pgdata:
+
+services:
+  app:
+    build: .
+    ports:
+      - '8000:5000'
+    depends_on:
+      - postgres
+    volumes:
+      - .:/code
+    environment:
+      - PYTHONPATH=/code
+      - TZ=Europe/Moscow
+
+  postgres:
+    image: postgres:latest
+    expose:
+      - 5432
+    ports:
+      - '5432:5432'
+    environment:
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_HOST=${POSTGRES_HOST}
+        - POSTGRES_PORT=${POSTGRES_PORT}
+        - TZ=Europe/Moscow
+        - PGTZ=Europe/Moscow
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql

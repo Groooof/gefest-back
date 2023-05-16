@@ -16,4 +16,5 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 );
 
 INSERT INTO users (username, hashed_password, role, is_superuser)
-VALUES ('admin', crypt('admin', gen_salt('bf', 10)), 'common', TRUE);
+VALUES ('admin', crypt('admin', gen_salt('bf', 10)), 'common', TRUE)
+ON CONFLICT DO NOTHING;

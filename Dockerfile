@@ -1,4 +1,5 @@
 FROM python:3.10.8
+ENV TZ="Europe/Moscow"
 WORKDIR /code
 COPY requirements.txt requirements.txt
 RUN /usr/local/bin/python -m pip install --upgrade pip

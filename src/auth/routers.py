@@ -89,12 +89,14 @@ async def login(response: Response,
                         str(at),
                         max_age=int(config.REFRESH_TOKEN_LIFETIME.total_seconds()),
                         secure=True,
-                        httponly=True)
+                        httponly=True,
+                        samesite='none')
     response.set_cookie(config.REFRESH_TOKEN_NAME,
                         str(rt),
                         max_age=int(config.REFRESH_TOKEN_LIFETIME.total_seconds()),
                         secure=True,
-                        httponly=True)
+                        httponly=True,
+                        samesite='none')
     response.status_code = 200
 
 
@@ -171,10 +173,12 @@ async def refresh(response: Response,
                         str(new_at),
                         max_age=int(config.REFRESH_TOKEN_LIFETIME.total_seconds()),
                         secure=True,
-                        httponly=True)
+                        httponly=True,
+                        samesite='none')
     response.set_cookie(config.REFRESH_TOKEN_NAME,
                         str(new_rt),
                         max_age=int(config.REFRESH_TOKEN_LIFETIME.total_seconds()),
                         secure=True,
-                        httponly=True)
+                        httponly=True,
+                        samesite='none')
     response.status_code = 200

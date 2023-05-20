@@ -50,7 +50,7 @@ async def protected(request: Request,
     return 'welcome 2z club body'
 
 
-@router.post('/',
+@router.post('',
              name='Аутентификация пользователя',
              responses=generate_openapi_responses(
                  exc.InvalidRequestError,
@@ -98,7 +98,7 @@ async def login(response: Response,
     response.status_code = 200
 
 
-@router.delete('/',
+@router.delete('',
                name='Выход из системы',
                responses=generate_openapi_responses(
                    exc.InvalidRequestError,
@@ -132,7 +132,7 @@ async def logout(response: Response,
     response.status_code = 200
 
 
-@router.patch('/',
+@router.patch('',
               name='Обновление токенов',
               responses=generate_openapi_responses(
                    exc.InvalidRequestError,

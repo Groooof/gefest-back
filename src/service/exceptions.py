@@ -23,3 +23,8 @@ class ExpiredTokenError(CustomHTTPException):
     status_code = 401
     error = 'expired_token'
     error_description = 'Expired token'
+
+class AccessDenied(CustomHTTPException):
+    status_code = 403
+    error = 'access_denied'
+    error_description = 'Wrong role'

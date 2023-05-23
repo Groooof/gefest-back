@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import Depends, Request, HTTPException
 import asyncpg
 
@@ -57,6 +58,16 @@ class RefreshUUIDCookie:
             raise exc.InvalidTokenError
 
         return rt
+
+
+class CheckRoles:
+    def __init__(self, *allowed_roles) -> None:
+        self._allowed_roles = allowed_roles
+
+    def __call__(self, at: AccessToken = Depends(AccessJWTCookie())) -> None:
+        role = at.role
+        if role not in self._allowed_roles:
+            raise exc.AccessDenied
 
 
 def get_db_connection(con: asyncpg.Connection = Depends(database.connection)):

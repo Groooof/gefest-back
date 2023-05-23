@@ -9,13 +9,13 @@ class RefreshToken:
         class Input(pd.BaseModel):
             user_id: UUID
             token: UUID
-            expires_in: datetime
+            expires_at: datetime
             
     class Update:
         class Input(pd.BaseModel):
             token: UUID
             new_token: UUID
-            new_expires_in: datetime
+            new_expires_at: datetime
             
     class Delete:
         class Input(pd.BaseModel):
@@ -26,7 +26,6 @@ class RefreshToken:
             user_id: UUID
             token: UUID
         
-
 
 
 

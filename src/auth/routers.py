@@ -12,24 +12,24 @@ import asyncpg
 from ..users.repos import PostgresUsersRepo
 from ..users.dto import Users as UsersDto
 from .. import config
-from ..dependencies import (
+from ..service import exceptions as exc
+from ..service.fastapi_custom import generate_openapi_responses
+from ..service.dependencies import (
     AccessJWTCookie,
     RefreshUUIDCookie,
     get_db_connection
 )
-
-from .dto import RefreshToken as RefreshTokenDto
-from .repos import PostgresRefreshTokenRepo
-from . import schemas as sch
-from .service import (
+from ..service.tokens import (
     AccessToken,
     RefreshToken,
     AccessTokenFactory,
     RefreshTokenFactory
 )
 
-from src.public import exceptions as exc
-from ..public.utils.fastapi_custom import generate_openapi_responses
+from .dto import RefreshToken as RefreshTokenDto
+from .repos import PostgresRefreshTokenRepo
+from . import schemas as sch
+
 
 
 router = APIRouter(tags=['users'], prefix='/session')
@@ -57,7 +57,8 @@ async def protected(request: Request,
                  exc.InvalidTokenError,
                  exc.ExpiredTokenError,
                  exc.InvalidClientError
-                 )
+                 ),
+             response_model=sch.Login.Response.Body
              )
 async def login(response: Response,
                 body: sch.Login.Request.Body,
@@ -66,23 +67,20 @@ async def login(response: Response,
     Принимает имя пользователя и пароль в теле запроса <br>
     В случае успешной аутентификации устанавливает access и refresh токены в куки
     '''
-    
     u_repo = PostgresUsersRepo(con)
     
     verify_data = UsersDto.Verify.Input(username=body.username, password=body.password)
     res = await u_repo.verify(verify_data)
-    if res.id is None:
+    if res is None:
         raise exc.InvalidClientError
     
-    user_id = res.id
-    
-    at = AccessTokenFactory.create(user_id)    
+    at = AccessTokenFactory.create(res.id, res.role_sys_name)    
     rt = RefreshTokenFactory.create()
 
     rt_repo = PostgresRefreshTokenRepo(con)
-    create_data = RefreshTokenDto.Create.Input(user_id=user_id,
+    create_data = RefreshTokenDto.Create.Input(user_id=res.id,
                                                token=str(rt),
-                                               expires_in=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
+                                               expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
     await rt_repo.create(create_data)
     
     response.set_cookie(config.ACCESS_TOKEN_NAME, 
@@ -98,6 +96,7 @@ async def login(response: Response,
                         httponly=True,
                         samesite='none')
     response.status_code = 200
+    return sch.Login.Response.Body(user_id=res.id, role_code=res.role_code)
 
 
 @router.delete('',
@@ -160,13 +159,13 @@ async def refresh(response: Response,
         raise exc.InvalidTokenError
     
     # генерируем новые токены
-    new_at = AccessTokenFactory.create(at.user_id)
+    new_at = AccessTokenFactory.create(at.user_id, at.role)
     new_rt = RefreshTokenFactory.create()
     
     # заменяем в бд старый токен на новый
     update_data = RefreshTokenDto.Update.Input(token=str(rt),
                                                new_token=str(new_rt),
-                                               new_expires_in=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
+                                               new_expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
     await rt_repo.update(update_data)
     
     response.set_cookie(config.ACCESS_TOKEN_NAME, 

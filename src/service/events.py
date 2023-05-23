@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
-from src.database import database
-from src.config import postgres_env, POSTGRES_DSN
+from .database import database
+from ..config import postgres_env, POSTGRES_DSN
 
 
 def get_postgres_dsn(user: str, password: str, host: str, port: str, db: str,

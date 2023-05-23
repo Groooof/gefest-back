@@ -1,4 +1,4 @@
-from .utils.fastapi_custom import CustomHTTPException
+from .fastapi_custom import CustomHTTPException
 
 
 class InvalidRequestError(CustomHTTPException):

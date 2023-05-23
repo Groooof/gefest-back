@@ -1,10 +1,10 @@
-from src.database import database
 from fastapi import Depends, Request, HTTPException
 import asyncpg
 
-from . import config
-from .auth.service import AccessToken, RefreshToken, AccessTokenFactory, RefreshTokenFactory
-from .public import exceptions as exc
+from .tokens import AccessToken, RefreshToken, AccessTokenFactory, RefreshTokenFactory
+from .database import database
+from . import exceptions as exc
+from .. import config
 
 
 class AccessJWTCookie:    

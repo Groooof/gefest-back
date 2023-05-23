@@ -9,11 +9,19 @@ class Users:
         class Input(pd.BaseModel):
             username: str
             password: str
-            role: str
-            is_superuser: bool = False
+            role_id: UUID
+            company_id: UUID
+            department_id: tp.Optional[UUID]
+            position_id: tp.Optional[UUID]
+            grade_id: tp.Optional[UUID]
+            first_name: str
+            last_name: str
+            middle_name: str
+            email: str
+            creator_id: tp.Optional[UUID]
             
         class Output(pd.BaseModel):
-            id: tp.Optional[UUID]
+            id: UUID
             
     class Verify:
         class Input(pd.BaseModel):
@@ -21,4 +29,6 @@ class Users:
             password: str
             
         class Output(pd.BaseModel):
-            id: tp.Optional[UUID]
+            id: UUID
+            role_code: int
+            role_sys_name: str

@@ -32,15 +32,15 @@ class PostgresRefreshTokenRepo(RefreshTokenRepo):
 
     async def create(self, data: dto.RefreshToken.Create.Input) -> None:
         query = f'''
-        INSERT INTO {self._db_table} (user_id, token, expires_in) VALUES ($1, $2, $3)
+        INSERT INTO {self._db_table} (user_id, token, expires_at) VALUES ($1, $2, $3)
         '''
-        await self._con.execute(query, data.user_id, data.token, data.expires_in)
+        await self._con.execute(query, data.user_id, data.token, data.expires_at)
         
     async def update(self, data: dto.RefreshToken.Update.Input) -> None:
         query = f'''
-        UPDATE {self._db_table} SET token=$2, expires_in=$3 WHERE token=$1;
+        UPDATE {self._db_table} SET token=$2, expires_at=$3 WHERE token=$1;
         '''
-        await self._con.execute(query, data.token, data.new_token, data.new_expires_in)
+        await self._con.execute(query, data.token, data.new_token, data.new_expires_at)
         
     async def delete(self, data: dto.RefreshToken.Delete.Input) -> None:
         query = f'''
@@ -50,6 +50,6 @@ class PostgresRefreshTokenRepo(RefreshTokenRepo):
         
     async def verify(self, data: dto.RefreshToken.Verify.Input) -> bool:
         query = f'''
-        SELECT EXISTS (SELECT 1 FROM {self._db_table} WHERE user_id=$1 AND token=$2 AND expires_in>=NOW());
+        SELECT EXISTS (SELECT 1 FROM {self._db_table} WHERE user_id=$1 AND token=$2 AND expires_at>=NOW());
         '''
         return await self._con.fetchval(query, data.user_id, data.token)

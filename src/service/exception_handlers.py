@@ -5,9 +5,8 @@ from fastapi import Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic.error_wrappers import ValidationError
 
-from .public.utils.fastapi_custom import CustomHTTPException
-from .public.exceptions import InvalidRequestError
-from .public.schemas import Error
+from .fastapi_custom import CustomHTTPException
+from .exceptions import InvalidRequestError
 
 
 async def custom_http_exception_handler(request: Request, exc: CustomHTTPException) -> Response:
@@ -15,10 +14,10 @@ async def custom_http_exception_handler(request: Request, exc: CustomHTTPExcepti
     if exc.error is None:
         return Response(status_code=exc.status_code, headers=headers)
     
-    response_data = Error(error=exc.error, error_description=exc.error_description)
+    response_data = {'error': exc.error, 'error_description': exc.error_description}
     
     return JSONResponse(
-        response_data.dict(), 
+        response_data, 
         status_code=exc.status_code, 
         headers=headers
     )

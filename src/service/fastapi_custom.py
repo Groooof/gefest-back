@@ -3,8 +3,6 @@ import typing as tp
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 
-from ..schemas import Error
-
 
 class CustomOpenAPIGenerator:
     def __init__(self, app: FastAPI) -> None:
@@ -46,24 +44,6 @@ class CustomHTTPException(Exception):
     error_description: str
 
 
-# 401: {
-#                     "description": "Invalid or expired token",
-#                     "content": {
-#                         "application/json": {
-#                             "examples": {
-#                                 "invalid_token": {
-#                                     "summary": "Invalid token",
-#                                     "value": {"detail": "invalid_token"}
-#                                 },
-#                                 "token_expired": {
-#                                     "summary": "Token expired",
-#                                     "value": {"detail": "token_expired"}
-#                                 }
-#                             }
-#                         }
-#                     }
-#                 }
-
 def generate_openapi_responses(*responses: CustomHTTPException):
     default_content_type = 'application/json'
     result = {}
@@ -79,8 +59,7 @@ def generate_openapi_responses(*responses: CustomHTTPException):
         
         response_example = {
             'summary': response.error.capitalize().replace('_', ' '),
-            'value': Error(error=response.error,
-                            error_description=response.error_description).dict()
+            'value': {'error': response.error, 'error_description': response.error_description}
         }
         result[response.status_code]['content'][default_content_type]['examples'][response.error] = response_example
             

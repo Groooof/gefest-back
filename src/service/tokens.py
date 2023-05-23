@@ -99,6 +99,10 @@ class AccessToken(JWTToken):
     @property
     def user_id(self):
         return self.decode()['sub']
+    
+    @property
+    def role(self):
+        return self.decode()['role']
 
 
 class RefreshToken(UUIDToken):
@@ -121,11 +125,12 @@ class RefreshTokenFactory(UUIDTokenFactory):
 
 class AccessTokenFactory(JWTTokenFactory):
     @classmethod
-    def create(cls, user_id: tp.Union[str, uuid.UUID]) -> AccessToken:
+    def create(cls, user_id: tp.Union[str, uuid.UUID], role: str) -> AccessToken:
         kwargs = {}
         kwargs['secret'] = config.jwt_env.SECRET
         kwargs['algorithm'] = 'HS256'
         kwargs['sub'] = str(user_id)
+        kwargs['role'] = role
         kwargs['exp'] = dt.datetime.now(tz=dt.timezone.utc) + config.ACCESS_TOKEN_LIFETIME
         jwt_token = super().create(**kwargs)
         token = str(jwt_token)

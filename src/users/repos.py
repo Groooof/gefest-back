@@ -66,6 +66,13 @@ class PostgresUsersRepo(UsersRepo):
         res = await self._con.fetchrow(query, *data.dict().values())
         return dto.Users.GetInfoById.Output(**res) if res is not None else None
     
+    async def delete(self, data: dto.Users.Delete.Input) -> tp.Optional[dto.Users.Verify.Output]:
+        query = f'''
+        DELETE FROM {self._db_table} WHERE id = $1 RETURNING id;
+        '''
+        res = await self._con.fetchrow(query, *data.dict().values())
+        return dto.Users.Delete.Output(**res) if res is not None else None
+    
     async def verify(self, data: dto.Users.Verify.Input) -> tp.Optional[dto.Users.Verify.Output]:
         query = f'''
         SELECT u.id, u.role_code, r.sys_name AS role_sys_name
@@ -75,3 +82,5 @@ class PostgresUsersRepo(UsersRepo):
         '''
         res = await self._con.fetchrow(query, data.username, data.password)
         return dto.Users.Verify.Output(**res) if res is not None else None
+    
+    

@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     token UUID PRIMARY KEY,
     expires_at TIMESTAMP NOT NULL,
     user_id UUID NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS skills (
@@ -540,6 +540,7 @@ VALUES ('a35302aa-b092-4b30-a384-464ed29619e1', 'ООО "Пачки"', 'пу п�
 
 INSERT INTO users
 (
+    id,
     username,
     hashed_password,
     role_code,
@@ -555,6 +556,7 @@ INSERT INTO users
 )
 VALUES
 (
+    '9fdaa71d-1994-4906-8dcd-f3ef792d5c88',
     'admin',
     crypt('admin', gen_salt('bf', 10)),
     1,

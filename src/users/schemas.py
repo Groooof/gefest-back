@@ -81,3 +81,17 @@ class Read:
                         'email': 'pupupu@mail.ru'
                     }
                 }
+
+
+class Delete:            
+    class Response:
+        class Body(pd.BaseModel):
+            id: UUID
+
+            class Config:
+                schema_extra = {
+                        "title": "DeleteResponseBody",
+                        "example": {
+                            'id': '6d48cf29-a9ac-45c6-a9e7-85f455b0f361'
+                        }
+                    }

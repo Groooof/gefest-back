@@ -72,7 +72,7 @@ async def create(body: sch.Create.Request.Body,
              response_model=sch.Read.Response.Body,
              dependencies=[Depends(CheckRoles(Roles.admin))]
              )
-async def read(id: tp.Optional[UUID] = None,
+async def read(id: UUID,
                con: asyncpg.Connection = Depends(get_db_connection),
                at: AccessToken = Depends(AccessJWTCookie())):
     '''
@@ -112,3 +112,31 @@ async def read(con: asyncpg.Connection = Depends(get_db_connection),
         raise exc.InvalidClientError
     
     return sch.Read.Response.Body(**res.dict())
+
+
+@router.delete('/{id}',
+               name='Удаление пользователя',
+               responses=generate_openapi_responses(
+                   exc.InvalidRequestError,
+                   exc.InvalidTokenError,
+                   exc.ExpiredTokenError,
+                   exc.InvalidClientError,
+                   exc.AccessDenied
+                   ),
+               response_model=sch.Delete.Response.Body,
+               dependencies=[Depends(CheckRoles(Roles.admin))]
+               )
+async def delete(id: UUID,
+                 con: asyncpg.Connection = Depends(get_db_connection),
+                 at: AccessToken = Depends(AccessJWTCookie())):
+    '''
+    Удаляет пользователя с указанным id
+    '''
+    
+    users_repo = PostgresUsersRepo(con)
+    query_data = UsersDto.Delete.Input(id=id)
+    res = await users_repo.delete(query_data)
+    if res is None:
+        raise exc.InvalidClientError
+    
+    return sch.Delete.Response.Body(**res.dict())

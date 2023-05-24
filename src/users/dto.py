@@ -33,6 +33,13 @@ class Users:
             role_code: int
             role_sys_name: str
 
+    class Delete:
+        class Input(pd.BaseModel):
+            id: UUID
+            
+        class Output(pd.BaseModel):
+            id: UUID
+
     class GetInfoById:
         class Input(pd.BaseModel):
             id: UUID

@@ -9,7 +9,7 @@ class Users:
         class Input(pd.BaseModel):
             username: str
             password: str
-            role_id: UUID
+            role_code: int
             company_id: UUID
             department_id: tp.Optional[UUID]
             position_id: tp.Optional[UUID]

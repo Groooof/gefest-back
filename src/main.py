@@ -7,7 +7,7 @@ from .service import events
 from .service.exception_handlers import validation_error_handler, custom_http_exception_handler
 from .auth.routers import router as auth_router
 from .roles.routers import router as roles_router
-# from src.users.routers import router as users_router
+from src.users.routers import router as users_router
 from .service.fastapi_custom import (
     CustomHTTPException,
     CustomOpenAPIGenerator
@@ -28,7 +28,7 @@ def get_app() -> FastAPI:
     app.add_exception_handler(CustomHTTPException, custom_http_exception_handler)
     app.include_router(router=auth_router)
     app.include_router(router=roles_router)
-    # app.include_router(router=users_router)
+    app.include_router(router=users_router)
     app.add_event_handler('startup', events.on_startup)
     app.add_event_handler('shutdown', events.on_shutdown)
     app.add_middleware(

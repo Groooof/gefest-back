@@ -28,7 +28,7 @@ class PostgresUsersRepo(UsersRepo):
         (
             username,
             hashed_password,
-            role_id,
+            role_code,
             company_id,
             department_id,
             position_id,
@@ -42,7 +42,7 @@ class PostgresUsersRepo(UsersRepo):
         VALUES ($1, crypt($2, gen_salt('bf', 10)), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING id
         '''
-        res = await self._con.fetchval(query, **data.dict().values())
+        res = await self._con.fetchval(query, *data.dict().values())
         return dto.Users.Create.Output(id=res) if res is not None else None
     
     async def verify(self, data: dto.Users.Verify.Input) -> tp.Optional[dto.Users.Verify.Output]:

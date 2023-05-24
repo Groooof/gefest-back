@@ -32,7 +32,7 @@ from . import schemas as sch
 
 
 
-router = APIRouter(tags=['users'], prefix='/session')
+router = APIRouter(tags=['sessions'], prefix='/session')
 
 
 @router.post('/protected',

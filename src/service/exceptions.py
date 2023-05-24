@@ -24,7 +24,14 @@ class ExpiredTokenError(CustomHTTPException):
     error = 'expired_token'
     error_description = 'Expired token'
 
+
 class AccessDenied(CustomHTTPException):
     status_code = 403
     error = 'access_denied'
     error_description = 'Wrong role'
+
+
+class AlreadyExists(CustomHTTPException):
+    status_code = 409
+    error = 'already_exists'
+    error_description = 'Resourse already exists'

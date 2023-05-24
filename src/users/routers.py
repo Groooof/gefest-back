@@ -1,6 +1,8 @@
+from uuid import UUID
+import typing as tp
 from fastapi import (
     APIRouter,
-    Depends
+    Depends, Path
 )
 
 import asyncpg
@@ -54,3 +56,59 @@ async def create(body: sch.Create.Request.Body,
         raise exc.AlreadyExists
     
     return sch.Create.Response.Body(id=res.id)
+
+
+
+
+@router.get('/{id}',
+             name='Получение информации о пользователе с указанным id',
+             responses=generate_openapi_responses(
+                 exc.InvalidRequestError,
+                 exc.InvalidTokenError,
+                 exc.ExpiredTokenError,
+                 exc.InvalidClientError,
+                 exc.AccessDenied
+                 ),
+             response_model=sch.Read.Response.Body,
+             dependencies=[Depends(CheckRoles(Roles.admin))]
+             )
+async def read(id: tp.Optional[UUID] = None,
+               con: asyncpg.Connection = Depends(get_db_connection),
+               at: AccessToken = Depends(AccessJWTCookie())):
+    '''
+    Возвращает данные о пользователе <br>
+    '''
+    
+    users_repo = PostgresUsersRepo(con)
+    query_data = UsersDto.GetInfoById.Input(id=id)
+    res = await users_repo.get_info_by_id(query_data)
+    if res is None:
+        raise exc.InvalidClientError
+    
+    return sch.Read.Response.Body(**res.dict())
+
+
+@router.get('',
+             name='Получение информации о текущем пользователе',
+             responses=generate_openapi_responses(
+                 exc.InvalidRequestError,
+                 exc.InvalidTokenError,
+                 exc.ExpiredTokenError,
+                 exc.InvalidClientError,
+                 exc.AccessDenied
+                 ),
+             response_model=sch.Read.Response.Body
+             )
+async def read(con: asyncpg.Connection = Depends(get_db_connection),
+               at: AccessToken = Depends(AccessJWTCookie())):
+    '''
+    Возвращает данные о пользователе, который авторизован в данный момент <br>
+    '''
+    
+    users_repo = PostgresUsersRepo(con)
+    query_data = UsersDto.GetInfoById.Input(id=at.user_id)
+    res = await users_repo.get_info_by_id(query_data)
+    if res is None:
+        raise exc.InvalidClientError
+    
+    return sch.Read.Response.Body(**res.dict())

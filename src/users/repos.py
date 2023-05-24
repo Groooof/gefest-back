@@ -45,6 +45,27 @@ class PostgresUsersRepo(UsersRepo):
         res = await self._con.fetchval(query, *data.dict().values())
         return dto.Users.Create.Output(id=res) if res is not None else None
     
+    async def get_info_by_id(self, data: dto.Users.GetInfoById.Input) -> tp.Optional[dto.Users.GetInfoById.Output]:
+        query = f'''
+        SELECT
+            username,
+            hashed_password,
+            role_code,
+            company_id,
+            department_id,
+            position_id,
+            grade_id,
+            first_name,
+            last_name,
+            middle_name,
+            email,
+            creator_id
+        FROM {self._db_table}
+        WHERE id = $1
+        '''
+        res = await self._con.fetchrow(query, *data.dict().values())
+        return dto.Users.GetInfoById.Output(**res) if res is not None else None
+    
     async def verify(self, data: dto.Users.Verify.Input) -> tp.Optional[dto.Users.Verify.Output]:
         query = f'''
         SELECT u.id, u.role_code, r.sys_name AS role_sys_name

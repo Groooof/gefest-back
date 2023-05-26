@@ -1,5 +1,6 @@
 import typing as tp
 from uuid import UUID
+from datetime import datetime
 
 import pydantic as pd
 
@@ -105,6 +106,9 @@ class UserInfo(pd.BaseModel):
     last_name: str
     middle_name: str
     email: str
+    creator_id: tp.Optional[UUID]
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         orm_mode = True

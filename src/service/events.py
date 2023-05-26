@@ -43,6 +43,11 @@ async def on_startup() -> None:
         'middle_name': 'Иванович',
         'email': 'vanya228@mail.ru'
         }
+    test_skills = [
+        {'id': '00000000-0000-0000-0000-000000000011', 'name': 'Python', 'normalized_name': 'Python', 'company_id': '00000000-0000-0000-0000-000000000000'},
+        {'id': '00000000-0000-0000-0000-000000000012', 'name': 'Docker', 'normalized_name': 'Docker', 'company_id': '00000000-0000-0000-0000-000000000000'},
+        {'id': '00000000-0000-0000-0000-000000000013', 'name': 'JavaScript', 'normalized_name': 'JavaScript', 'company_id': '00000000-0000-0000-0000-000000000000'}
+    ]
     
     async with engine.begin() as conn:
         await conn.run_sync(m.Base.metadata.drop_all)
@@ -55,6 +60,7 @@ async def on_startup() -> None:
         await conn.execute(insert(m.Position).values(test_positions).on_conflict_do_nothing())
         await conn.execute(insert(m.Grade).values(test_grades).on_conflict_do_nothing())
         await conn.execute(insert(m.User).values(test_admin).on_conflict_do_nothing())
+        await conn.execute(insert(m.Skill).values(test_skills).on_conflict_do_nothing())
         await conn.commit()
         
         

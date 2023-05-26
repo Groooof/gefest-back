@@ -90,6 +90,14 @@ class RoleRef(Base):
     # users = relationship('User', backref='role')
 
 
+class VacansyStatusRef(Base):
+    __tablename__ = 'vacancy_stats_ref'
+    
+    code = sa.Column(sa.Integer, primary_key=True)
+    value = sa.Column(sa.String, nullable=False)
+    is_archive = sa.Column(sa.Boolean, default=False, nullable=False)
+
+
 # Tables ------------------------------------------------------
 
 

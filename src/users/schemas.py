@@ -51,6 +51,7 @@ class Create:
                 
             
 class UserInfo(pd.BaseModel):
+    id: UUID
     username: str
     role_code: int
     company_id: UUID
@@ -67,6 +68,7 @@ class UserInfo(pd.BaseModel):
         schema_extra = {
             "title": "UserInfo",
             "example": {
+                'id': '00000000-0000-0000-0000-000000000001',
                 'username': 'user_1',
                 'password': 'qwerty',
                 'role_code': 2,

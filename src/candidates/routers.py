@@ -54,9 +54,11 @@ async def create(body: sch.Create.Request.Body,
     res = await session.execute(stmt)
     company_id = res.scalars().one()
     
-    stmt = insert(m.Candidate).values(creator_id=at.user_id, **body.candidate.dict()).returning(m.Candidate.id)
+    candidate_data = body.dict_candidate_only()
+    candidate_data['creator_id'] = at.user_id
+    
+    stmt = insert(m.Candidate).values(candidate_data).returning(m.Candidate.id)
     res = await session.execute(stmt)
-    await session.commit()
     
     candidate_id = res.scalars().one()
     
@@ -69,18 +71,16 @@ async def create(body: sch.Create.Request.Body,
         
     stmt = insert(m.CandidateContact).values(contacts_for_insert)
     res = await session.execute(stmt)    
-    await session.commit()
     
-    work_expirience_for_insert = []
-    for expirience in body.expiriense:
-        expirience_dict = expirience.dict()
-        expirience_dict['creator_id'] = at.user_id
-        expirience_dict['candidate_id'] = candidate_id
-        work_expirience_for_insert.append(expirience_dict)
+    work_places_for_insert = []
+    for work_place in body.work_places:
+        work_place_dict = work_place.dict()
+        work_place_dict['creator_id'] = at.user_id
+        work_place_dict['candidate_id'] = candidate_id
+        work_places_for_insert.append(work_place_dict)
         
-    stmt = insert(m.CandidateWorkExpirience).values(work_expirience_for_insert)
+    stmt = insert(m.CandidateWorkPlace).values(work_places_for_insert)
     res = await session.execute(stmt)    
-    await session.commit()
     
     languages_for_insert = []
     for lang in body.languages:
@@ -91,24 +91,21 @@ async def create(body: sch.Create.Request.Body,
         
     stmt = insert(m.CandidateLanguageAbility).values(languages_for_insert)
     res = await session.execute(stmt)    
-    await session.commit()
     
     notes_for_insert = []
     for note in body.notes:
-        note_dict = {}
-        note_dict['note'] = note
+        note_dict = note.dict()
         note_dict['creator_id'] = at.user_id
         note_dict['candidate_id'] = candidate_id
         notes_for_insert.append(note_dict)
         
     stmt = insert(m.CandidateNote).values(notes_for_insert)
     res = await session.execute(stmt)    
-    await session.commit()
     
     new_skills_for_insert = []
     existing_skills_for_insert = []
     for skill in body.skills:
-        if isinstance(skill, sch.NewSkill):
+        if isinstance(skill, sch.candidate.skill.Create):
             new_skill_dict = skill.dict()
             new_skill_dict['normalized_name'] = skill.name.capitalize()
             new_skill_dict['company_id'] = company_id
@@ -121,7 +118,6 @@ async def create(body: sch.Create.Request.Body,
             
     stmt = insert(m.Skill).values(new_skills_for_insert).returning(m.Skill.id)
     res = await session.execute(stmt)   
-    await session.commit() 
     
     new_skill_ids = res.scalars().all()
     for skill_id in new_skill_ids:
@@ -164,7 +160,7 @@ async def get_list(query: Query = Depends(sch.GetList.Request.Query),
                selectinload(m.Candidate.languages),
                selectinload(m.Candidate.notes),
                selectinload(m.Candidate.skills),
-               selectinload(m.Candidate.work_expirience),
+               selectinload(m.Candidate.work_places),
                ) \
            .order_by(m.Candidate.created_at.desc())
            
@@ -187,4 +183,4 @@ async def get_list(query: Query = Depends(sch.GetList.Request.Query),
     
     res_list = res.scalars().all()
     
-    return sch.GetList.Response.Body(candidates=[sch.CandidateInfo.from_orm(orm_model) for orm_model in res_list])
+    return sch.GetList.Response.Body(candidates=[sch.candidate.Read.from_orm(orm_model) for orm_model in res_list])

@@ -304,7 +304,7 @@ class Candidate(Base):
     languages = relationship('CandidateLanguageAbility',)
     notes = relationship('CandidateNote')
     skills = relationship('CandidateSkill')
-    work_expirience = relationship('CandidateWorkExpirience')
+    work_places = relationship('CandidateWorkPlace')
     creator = relationship('User')
     
     
@@ -321,12 +321,12 @@ class CandidateContact(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    type = relationship('ContactTypeRef',)
+    type = relationship('ContactTypeRef', lazy='selectin')
     creator = relationship('User',)
 
 
-class CandidateWorkExpirience(Base):
-    __tablename__ = 'candidate_work_expirience'
+class CandidateWorkPlace(Base):
+    __tablename__ = 'candidate_work_places'
     
     id = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=sa.text("gen_random_uuid()"))
     candidate_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('candidates.id'), nullable=False)

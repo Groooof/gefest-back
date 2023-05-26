@@ -52,7 +52,11 @@ async def create(body: sch.Create.Request.Body,
     Принимает данные для создания пользователя в теле запроса и вносит в бд <br>
     '''
     
-    stmt = insert(m.User).values(creator_id=at.user_id, **body.dict()).returning(m.User.id)
+    stmt = select(m.User.company_id).where(m.User.id == at.user_id)
+    res = await session.execute(stmt)
+    company_id = res.scalars().one()
+    
+    stmt = insert(m.User).values(creator_id=at.user_id, company_id=company_id, **body.dict()).returning(m.User.id)
     try:
         res = await session.execute(stmt)
         await session.commit()
@@ -165,7 +169,7 @@ async def get_company_users_info(session: AsyncSession = Depends(get_session),
     
     res_list = res.scalars().all()
     
-    return sch.GetCompanyUsersInfo.Response.Body(users=[sch.UserInfo.from_orm(orm_model) for orm_model in res_list])
+    return sch.GetCompanyUsersInfo.Response.Body(users=[sch.user.Read.from_orm(orm_model) for orm_model in res_list])
 
 
 @router.delete('/{id}',

@@ -1,6 +1,7 @@
 from fastapi import (
     APIRouter,
-    Depends
+    Depends,
+    Query
 )
 
 from sqlalchemy.dialects.postgresql import insert
@@ -135,3 +136,55 @@ async def create(body: sch.Create.Request.Body,
     await session.commit()
 
     return sch.Create.Response.Body(id=candidate_id)
+
+
+@router.get('',
+             name='Получение списка кандидатов',
+             responses=generate_openapi_responses(
+                 exc.InvalidRequestError,
+                 exc.InvalidTokenError,
+                 exc.ExpiredTokenError,
+                 exc.InvalidClientError
+                 ),
+             response_model=sch.GetList.Response.Body,
+             dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
+             )
+async def get_list(query: Query = Depends(sch.GetList.Request.Query),
+                   session: AsyncSession = Depends(get_session),
+                   at: AccessToken = Depends(AccessJWTCookie())):
+    
+    stmt = select(m.Candidate) \
+           .options(
+               selectinload(m.Candidate.position),
+               selectinload(m.Candidate.grade),
+               selectinload(m.Candidate.adress),
+               selectinload(m.Candidate.citizenship),
+               selectinload(m.Candidate.family_status),
+               selectinload(m.Candidate.contacts),
+               selectinload(m.Candidate.languages),
+               selectinload(m.Candidate.notes),
+               selectinload(m.Candidate.skills),
+               selectinload(m.Candidate.work_expirience),
+               ) \
+           .order_by(m.Candidate.created_at.desc())
+           
+    if query.first_name:
+        stmt = stmt.filter(m.Candidate.first_name.ilike(f'%{query.first_name}%'))
+        
+    if query.last_name:
+        stmt = stmt.filter(m.Candidate.last_name.ilike(f'%{query.last_name}%'))
+        
+    if query.middle_name:
+        stmt = stmt.filter(m.Candidate.middle_name.ilike(f'%{query.middle_name}%'))
+        
+    if query.position_id:
+        stmt = stmt.filter(m.Candidate.position_id == query.position_id)
+        
+    if query.recruiter_id:
+        stmt = stmt.filter(m.Candidate.creator_id == query.recruiter_id)
+           
+    res = await session.execute(stmt)
+    
+    res_list = res.scalars().all()
+    
+    return sch.GetList.Response.Body(candidates=[sch.CandidateInfo.from_orm(orm_model) for orm_model in res_list])

@@ -296,10 +296,16 @@ class Candidate(Base):
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
     position = relationship('Position',)
-    position = relationship('Grade',)
+    grade = relationship('Grade',)
     adress = relationship('AdressRef',)
     citizenship = relationship('CountryRef')
-    creator = relationship('User',)
+    family_status = relationship('FamilyStatusRef')
+    contacts = relationship('CandidateContact',)
+    languages = relationship('CandidateLanguageAbility',)
+    notes = relationship('CandidateNote')
+    skills = relationship('CandidateSkill')
+    work_expirience = relationship('CandidateWorkExpirience')
+    creator = relationship('User')
     
     
 class CandidateContact(Base):
@@ -315,7 +321,6 @@ class CandidateContact(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    candidate = relationship('Candidate',)
     type = relationship('ContactTypeRef',)
     creator = relationship('User',)
 
@@ -335,7 +340,6 @@ class CandidateWorkExpirience(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    candidate = relationship('Candidate',)
     creator = relationship('User',)
 
 
@@ -351,9 +355,8 @@ class CandidateLanguageAbility(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    candidate = relationship('Candidate',)
-    language = relationship('LanguageRef',)
-    language = relationship('LanguageLevelRef',)
+    language = relationship('LanguageRef', lazy="selectin")
+    language_level = relationship('LanguageLevelRef', lazy="selectin")
     creator = relationship('User',)
 
 
@@ -368,7 +371,6 @@ class CandidateNote(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    candidate = relationship('Candidate',)
     creator = relationship('User',)
 
 
@@ -383,8 +385,7 @@ class CandidateSkill(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    candidate = relationship('Candidate',)
-    skill = relationship('Skill',)
+    skill = relationship('Skill', lazy='selectin')
     creator = relationship('User',)
 
 

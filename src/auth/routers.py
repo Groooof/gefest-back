@@ -7,17 +7,21 @@ from fastapi import (
     Request
 )
 
-import asyncpg
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import delete, update
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import exc as sa_exc
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..users.repos import PostgresUsersRepo
-from ..users.dto import Users as UsersDto
 from .. import config
+from ..service import models as m
 from ..service import exceptions as exc
 from ..service.fastapi_custom import generate_openapi_responses
 from ..service.dependencies import (
     AccessJWTCookie,
     RefreshUUIDCookie,
-    get_db_connection
+    get_session
 )
 from ..service.tokens import (
     AccessToken,
@@ -26,10 +30,7 @@ from ..service.tokens import (
     RefreshTokenFactory
 )
 
-from .dto import RefreshToken as RefreshTokenDto
-from .repos import PostgresRefreshTokenRepo
 from . import schemas as sch
-
 
 
 router = APIRouter(tags=['sessions'], prefix='/session')
@@ -62,26 +63,29 @@ async def protected(request: Request,
              )
 async def login(response: Response,
                 body: sch.Login.Request.Body,
-                con: asyncpg.Connection = Depends(get_db_connection)):
+                session: AsyncSession = Depends(get_session)):
     '''
     Принимает имя пользователя и пароль в теле запроса <br>
     В случае успешной аутентификации устанавливает access и refresh токены в куки
     '''
-    u_repo = PostgresUsersRepo(con)
     
-    verify_data = UsersDto.Verify.Input(username=body.username, password=body.password)
-    res = await u_repo.verify(verify_data)
-    if res is None:
+    stmt = select(m.User).where(m.User.username==body.username).limit(1).options(selectinload(m.User.role))
+    res = await session.execute(stmt)
+    
+    try:
+        user = res.scalars().one()
+    except sa_exc.NoResultFound:
         raise exc.InvalidClientError
     
-    at = AccessTokenFactory.create(res.id, res.role_sys_name)    
-    rt = RefreshTokenFactory.create()
+    if user.password != body.password:
+        raise exc.InvalidClientError
 
-    rt_repo = PostgresRefreshTokenRepo(con)
-    create_data = RefreshTokenDto.Create.Input(user_id=res.id,
-                                               token=str(rt),
-                                               expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
-    await rt_repo.create(create_data)
+    at = AccessTokenFactory.create(user.id, user.role.sys_name)    
+    rt = RefreshTokenFactory.create()
+    
+    stmt = insert(m.RefreshToken).values(user_id=user.id, token=str(rt), expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
+    res = await session.execute(stmt)
+    await session.commit()
     
     response.set_cookie(config.ACCESS_TOKEN_NAME, 
                         str(at),
@@ -96,7 +100,7 @@ async def login(response: Response,
                         httponly=True,
                         samesite='none')
     response.status_code = 200
-    return sch.Login.Response.Body(user_id=res.id, role_code=res.role_code)
+    return sch.Login.Response.Body(user_id=user.id, role_code=user.role.code)
 
 
 @router.delete('',
@@ -107,7 +111,7 @@ async def login(response: Response,
                    )
                )
 async def logout(response: Response,
-                 con: asyncpg.Connection = Depends(get_db_connection),
+                 session: AsyncSession = Depends(get_session),
                  at: AccessToken = Depends(AccessJWTCookie(check_expires=False)),
                  rt: RefreshToken = Depends(RefreshUUIDCookie())):
     '''
@@ -116,20 +120,24 @@ async def logout(response: Response,
     В случае успешного выхода оба токена удаляются из кук
     '''
     
-    rt_repo = PostgresRefreshTokenRepo(con)
+    stmt = delete(m.RefreshToken).where(
+        (m.RefreshToken.user_id == at.user_id) 
+        & 
+        (m.RefreshToken.token == str(rt))
+        &
+        (m.RefreshToken.expires_at >= dt.datetime.now())
+    ).returning(m.RefreshToken.token)
+    res = await session.execute(stmt)
     
-    # проверяем в бд принадлежит ли refresh token данному пользователю
-    verify_data = RefreshTokenDto.Verify.Input(user_id=at.user_id, token=str(rt))
-    is_valid = await rt_repo.verify(verify_data)
-    if not is_valid:
+    try:
+        token = res.scalars().one()
+    except sa_exc.NoResultFound:
         raise exc.InvalidTokenError
-
-    # удаляем токен из бд
-    del_data = RefreshTokenDto.Delete.Input(token=str(rt))
-    await rt_repo.delete(del_data)
     
-    response.delete_cookie('at')
-    response.delete_cookie('rt')
+    await session.commit()
+    
+    response.delete_cookie(config.ACCESS_TOKEN_NAME)
+    response.delete_cookie(config.REFRESH_TOKEN_NAME)
     response.status_code = 200
 
 
@@ -141,7 +149,7 @@ async def logout(response: Response,
                    )
               )
 async def refresh(response: Response,
-                  con: asyncpg.Connection = Depends(get_db_connection),
+                  session: AsyncSession = Depends(get_session),
                   at: AccessToken = Depends(AccessJWTCookie(check_expires=False)),
                   rt: RefreshToken = Depends(RefreshUUIDCookie())):
     '''
@@ -150,23 +158,26 @@ async def refresh(response: Response,
     В случае успешного обновления в куки устанавливаются новые access и refresh токены
     '''
     
-    rt_repo = PostgresRefreshTokenRepo(con)
-    
-    # проверяем в бд принадлежит ли refresh token данному пользователю
-    verify_data = RefreshTokenDto.Verify.Input(user_id=at.user_id, token=str(rt))
-    is_valid = await rt_repo.verify(verify_data)
-    if not is_valid:
-        raise exc.InvalidTokenError
-    
-    # генерируем новые токены
     new_at = AccessTokenFactory.create(at.user_id, at.role)
-    new_rt = RefreshTokenFactory.create()
+    new_rt = RefreshTokenFactory.create()    
+
+    stmt = update(m.RefreshToken) \
+           .where(
+               (m.RefreshToken.user_id == at.user_id) 
+               & 
+               (m.RefreshToken.token == str(rt))
+               &
+               (m.RefreshToken.expires_at >= dt.datetime.now())) \
+           .values(token=str(new_rt), expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME) \
+           .returning(m.RefreshToken.token)
+           
+    res = await session.execute(stmt)
+    await session.commit()
     
-    # заменяем в бд старый токен на новый
-    update_data = RefreshTokenDto.Update.Input(token=str(rt),
-                                               new_token=str(new_rt),
-                                               new_expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)
-    await rt_repo.update(update_data)
+    try:
+        token = res.scalars().one()
+    except sa_exc.NoResultFound:
+        raise exc.InvalidTokenError
     
     response.set_cookie(config.ACCESS_TOKEN_NAME, 
                         str(new_at),

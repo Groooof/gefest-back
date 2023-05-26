@@ -1,9 +1,11 @@
 from typing import Any
 from fastapi import Depends, Request, HTTPException
 import asyncpg
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 from .tokens import AccessToken, RefreshToken, AccessTokenFactory, RefreshTokenFactory
-from .database import database
+from .database import database, async_session
 from . import exceptions as exc
 from .. import config
 
@@ -72,3 +74,8 @@ class CheckRoles:
 
 def get_db_connection(con: asyncpg.Connection = Depends(database.connection)):
     return con
+
+
+async def get_session() -> AsyncSession:
+    async with async_session() as session:
+        yield session

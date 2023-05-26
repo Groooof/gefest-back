@@ -8,6 +8,7 @@ class RoleInfo(pd.BaseModel):
     sys_name: str
     
     class Config:
+        orm_mode = True
         schema_extra = {
             "example": {
                 "code": "1",

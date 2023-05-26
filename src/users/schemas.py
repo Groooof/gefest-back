@@ -26,7 +26,7 @@ class Create:
                         'username': 'user_1',
                         'password': 'qwerty',
                         'role_code': 2,
-                        'company_id': 'a35302aa-b092-4b30-a384-464ed29619e1',
+                        'company_id': '00000000-0000-0000-0000-000000000000',
                         'department_id': None,
                         'position_id': None,
                         'grade_id': None,
@@ -50,47 +50,64 @@ class Create:
                     }
                 
             
-class Read:
+class UserInfo(pd.BaseModel):
+    username: str
+    role_code: int
+    company_id: UUID
+    department_id: tp.Optional[UUID]
+    position_id: tp.Optional[UUID]
+    grade_id: tp.Optional[UUID]
+    first_name: str
+    last_name: str
+    middle_name: str
+    email: str
+
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "title": "UserInfo",
+            "example": {
+                'username': 'user_1',
+                'password': 'qwerty',
+                'role_code': 2,
+                'company_id': '00000000-0000-0000-0000-000000000000',
+                'department_id': None,
+                'position_id': None,
+                'grade_id': None,
+                'first_name': 'Михаил',
+                'last_name': 'Петрович',
+                'middle_name': 'Зубенко',
+                'email': 'pupupu@mail.ru'
+            }
+        }
+            
+            
+class GetSelfInfo:
+    class Response:
+        class Body(UserInfo):
+            ...
+
+
+class GetUserInfo:
+    class Response:
+        class Body(UserInfo):
+            ...
+
+
+class GetCompanyUsersInfo:
     class Response:
         class Body(pd.BaseModel):
-            username: str
-            role_code: int
-            company_id: UUID
-            department_id: tp.Optional[UUID]
-            position_id: tp.Optional[UUID]
-            grade_id: tp.Optional[UUID]
-            first_name: str
-            last_name: str
-            middle_name: str
-            email: str
-
-            class Config:
-                schema_extra = {
-                    "title": "ReadRequestBody",
-                    "example": {
-                        'username': 'user_1',
-                        'password': 'qwerty',
-                        'role_code': 2,
-                        'company_id': 'a35302aa-b092-4b30-a384-464ed29619e1',
-                        'department_id': None,
-                        'position_id': None,
-                        'grade_id': None,
-                        'first_name': 'Михаил',
-                        'last_name': 'Петрович',
-                        'middle_name': 'Зубенко',
-                        'email': 'pupupu@mail.ru'
-                    }
-                }
+            users: tp.List[UserInfo]
 
 
-class Delete:            
+class DeleteUser:            
     class Response:
         class Body(pd.BaseModel):
             id: UUID
 
             class Config:
                 schema_extra = {
-                        "title": "DeleteResponseBody",
+                        "title": "DeleteUserResponseBody",
                         "example": {
                             'id': '6d48cf29-a9ac-45c6-a9e7-85f455b0f361'
                         }

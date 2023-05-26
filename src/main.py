@@ -8,6 +8,7 @@ from .service.exception_handlers import validation_error_handler, custom_http_ex
 from .auth.routers import router as auth_router
 from .roles.routers import router as roles_router
 from src.users.routers import router as users_router
+from src.candidates.routers import router as candidates_router
 from .service.fastapi_custom import (
     CustomHTTPException,
     CustomOpenAPIGenerator
@@ -23,12 +24,13 @@ def get_app() -> FastAPI:
     app.title = 'Gefest'
     app.description = ''
     app.version = '1.0.0'
-    app.add_exception_handler(RequestValidationError, validation_error_handler)
-    app.add_exception_handler(ValidationError, validation_error_handler)
+    # app.add_exception_handler(RequestValidationError, validation_error_handler)
+    # app.add_exception_handler(ValidationError, validation_error_handler)
     app.add_exception_handler(CustomHTTPException, custom_http_exception_handler)
     app.include_router(router=auth_router)
     app.include_router(router=roles_router)
     app.include_router(router=users_router)
+    app.include_router(router=candidates_router)
     app.add_event_handler('startup', events.on_startup)
     app.add_event_handler('shutdown', events.on_shutdown)
     app.add_middleware(

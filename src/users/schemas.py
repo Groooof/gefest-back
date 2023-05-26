@@ -50,14 +50,57 @@ class Create:
                     }
                 
             
+class DepartmentInfo(pd.BaseModel):
+    id: UUID
+    name: str
+            
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "title": "DepartmentInfo",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000002',
+                'name': 'Отдел разработки'
+            }
+        }
+        
+class PositionInfo(pd.BaseModel):
+    id: UUID
+    name: str
+            
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "title": "PositionInfo",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000005',
+                'name': 'Python-developer'
+            }
+        }
+        
+        
+class GradeInfo(pd.BaseModel):
+    id: UUID
+    name: str
+            
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "title": "PositionInfo",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000008',
+                'name': 'Junior'
+            }
+        }
+            
+
 class UserInfo(pd.BaseModel):
     id: UUID
     username: str
     role_code: int
-    company_id: UUID
-    department_id: tp.Optional[UUID]
-    position_id: tp.Optional[UUID]
-    grade_id: tp.Optional[UUID]
+    department: tp.Optional[DepartmentInfo]
+    position: tp.Optional[PositionInfo]
+    grade: tp.Optional[GradeInfo]
     first_name: str
     last_name: str
     middle_name: str
@@ -70,12 +113,19 @@ class UserInfo(pd.BaseModel):
             "example": {
                 'id': '00000000-0000-0000-0000-000000000001',
                 'username': 'user_1',
-                'password': 'qwerty',
                 'role_code': 2,
-                'company_id': '00000000-0000-0000-0000-000000000000',
-                'department_id': None,
-                'position_id': None,
-                'grade_id': None,
+                'department': {
+                    'id': '00000000-0000-0000-0000-000000000002',
+                    'name': 'Отдел разработки'
+                    },
+                'position': {
+                    'id': '00000000-0000-0000-0000-000000000005',
+                    'name': 'Python-developer'
+                },
+                'grade': {
+                    'id': '00000000-0000-0000-0000-000000000008',
+                    'name': 'Junior'
+                },
                 'first_name': 'Михаил',
                 'last_name': 'Петрович',
                 'middle_name': 'Зубенко',

@@ -79,14 +79,20 @@ async def get_self_info(session: AsyncSession = Depends(get_session),
     Возвращает данные о пользователе, который авторизован в данный момент <br>
     '''
     
-    stmt = select(m.User).where(m.User.id == at.user_id)
+    stmt = select(m.User) \
+           .where(m.User.id == at.user_id) \
+           .options(
+               selectinload(m.User.department),
+               selectinload(m.User.position),
+               selectinload(m.User.grade)
+            )
     res = await session.execute(stmt)
     
     try:
         user = res.scalars().one()
     except sa_exc.NoResultFound:
         raise exc.InvalidClientError
-    
+        
     return sch.GetSelfInfo.Response.Body.from_orm(user)
 
 
@@ -109,7 +115,13 @@ async def get_user_info(id: UUID,
     Возвращает данные о пользователе <br>
     '''
     
-    stmt = select(m.User).where(m.User.id == id)
+    stmt = select(m.User) \
+           .where(m.User.id == id) \
+           .options(
+               selectinload(m.User.department),
+               selectinload(m.User.position),
+               selectinload(m.User.grade)
+            )
     res = await session.execute(stmt)
     
     try:
@@ -132,14 +144,22 @@ async def get_user_info(id: UUID,
              response_model=sch.GetCompanyUsersInfo.Response.Body,
              dependencies=[Depends(CheckRoles(Roles.admin))]
              )
-async def read(session: AsyncSession = Depends(get_session),
-               at: AccessToken = Depends(AccessJWTCookie())):
+async def get_company_users_info(session: AsyncSession = Depends(get_session),
+                                 at: AccessToken = Depends(AccessJWTCookie())):
     '''
     Возвращает данные всех пользователях <br>
     '''
     
-    current_company_id = select(m.User.company_id).where(m.User.id == at.user_id).scalar_subquery()
-    stmt = select(m.User).where(m.User.company_id == current_company_id)
+    current_company_id = select(m.User.company_id) \
+                         .where(m.User.id == at.user_id) \
+                         .scalar_subquery()
+    stmt = select(m.User) \
+           .where(m.User.company_id == current_company_id) \
+           .options(
+               selectinload(m.User.department),
+               selectinload(m.User.position),
+               selectinload(m.User.grade)
+            )
     
     res = await session.execute(stmt)
     

@@ -139,4 +139,4 @@ async def get_list(query: Query = Depends(sch.GetList.Request.Query),
     
     candidates_repo = CandidatesRepo(session)
     candidates = await candidates_repo.get_list(company_id=at.company_id, **query.dict())
-    return sch.GetList.Response.Body(candidates=candidates)
+    return sch.GetList.Response.Body(candidates=candidates, count=len(candidates))

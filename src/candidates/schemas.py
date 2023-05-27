@@ -39,6 +39,7 @@ class GetList:
     class Response:
         class Body(BaseModel):
             candidates: tp.List[candidate.Read] = Field(default_factory=list)
+            count: int
 
 
 class Update:

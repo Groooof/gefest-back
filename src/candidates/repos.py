@@ -51,6 +51,9 @@ class CandidatesRepo:
         
     async def get_list(self,
                        company_id: UUID,
+                       first_name: tp.Optional[str],
+                       last_name: tp.Optional[str],
+                       middle_name: tp.Optional[str],
                        date_from: tp.Optional[date],
                        date_to: tp.Optional[date],
                        position_id: tp.Optional[UUID],
@@ -74,6 +77,12 @@ class CandidatesRepo:
            .where(m.User.company_id == company_id) \
            .order_by(m.Candidate.created_at.desc())
         
+        if first_name is not None:
+            stmt = stmt.filter(m.Candidate.first_name.ilike(f'%{first_name}%'))
+        if last_name is not None:
+            stmt = stmt.filter(m.Candidate.last_name.ilike(f'%{last_name}%'))
+        if middle_name is not None:
+            stmt = stmt.filter(m.Candidate.middle_name.ilike(f'%{middle_name}%'))
         if date_from is not None:
             stmt = stmt.filter(m.Candidate.created_at >= date_from)
         if date_to is not None:

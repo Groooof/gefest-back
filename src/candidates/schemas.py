@@ -26,6 +26,9 @@ class GetOne:
 class GetList:
     class Request:
         class Query(BaseModel):
+            first_name: tp.Optional[str]
+            last_name: tp.Optional[str]
+            middle_name: tp.Optional[str]
             date_from: tp.Optional[date]
             date_to: tp.Optional[date]
             position_id: tp.Optional[UUID]

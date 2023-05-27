@@ -1,3 +1,4 @@
+import typing as tp
 from uuid import UUID
 from fastapi import (
     APIRouter,
@@ -5,12 +6,12 @@ from fastapi import (
     Query
 )
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import delete, update
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy import exc as sa_exc
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..service import models as m
 
@@ -28,6 +29,8 @@ from ..service.tokens import (
 
 from ..service import exceptions as exc
 from ..service.fastapi_custom import generate_openapi_responses
+
+from .repos import CandidatesRepo
 
 
 router = APIRouter(tags=['candidates'], prefix='/candidates')
@@ -52,87 +55,9 @@ async def create(body: sch.Create.Request.Body,
     Добавляет кандидата в систему
     '''
     
-    stmt = select(m.User.company_id).where(m.User.id == at.user_id)
-    res = await session.execute(stmt)
-    company_id = res.scalars().one()
+    candidates_repo = CandidatesRepo(session)
+    candidate_id = await candidates_repo.add(at.user_id, body)
     
-    candidate_data = body.dict_candidate_only()
-    candidate_data['creator_id'] = at.user_id
-    
-    stmt = insert(m.Candidate).values(candidate_data).returning(m.Candidate.id)
-    res = await session.execute(stmt)
-    
-    candidate_id = res.scalars().one()
-    
-    contacts_for_insert = []
-    for contact in body.contacts:
-        contact_dict = contact.dict()
-        contact_dict['creator_id'] = at.user_id
-        contact_dict['candidate_id'] = candidate_id
-        contacts_for_insert.append(contact_dict)
-        
-    stmt = insert(m.CandidateContact).values(contacts_for_insert)
-    res = await session.execute(stmt)    
-    
-    work_places_for_insert = []
-    for work_place in body.work_places:
-        work_place_dict = work_place.dict()
-        work_place_dict['creator_id'] = at.user_id
-        work_place_dict['candidate_id'] = candidate_id
-        work_places_for_insert.append(work_place_dict)
-        
-    stmt = insert(m.CandidateWorkPlace).values(work_places_for_insert)
-    res = await session.execute(stmt)    
-    
-    languages_for_insert = []
-    for lang in body.languages:
-        lang_dict = lang.dict()
-        lang_dict['creator_id'] = at.user_id
-        lang_dict['candidate_id'] = candidate_id
-        languages_for_insert.append(lang_dict)
-        
-    stmt = insert(m.CandidateLanguageAbility).values(languages_for_insert)
-    res = await session.execute(stmt)    
-    
-    notes_for_insert = []
-    for note in body.notes:
-        note_dict = note.dict()
-        note_dict['creator_id'] = at.user_id
-        note_dict['candidate_id'] = candidate_id
-        notes_for_insert.append(note_dict)
-        
-    stmt = insert(m.CandidateNote).values(notes_for_insert)
-    res = await session.execute(stmt)    
-    
-    new_skills_for_insert = []
-    existing_skills_for_insert = []
-    for skill in body.skills:
-        if isinstance(skill, sch.candidate.skill.Create):
-            new_skill_dict = skill.dict()
-            new_skill_dict['normalized_name'] = skill.name.capitalize()
-            new_skill_dict['company_id'] = company_id
-            new_skills_for_insert.append(new_skill_dict)
-        else:
-            existing_skill_dict = skill.dict()
-            existing_skill_dict['creator_id'] = at.user_id
-            existing_skill_dict['candidate_id'] = candidate_id
-            existing_skills_for_insert.append(existing_skill_dict)
-            
-    stmt = insert(m.Skill).values(new_skills_for_insert).returning(m.Skill.id)
-    res = await session.execute(stmt)   
-    
-    new_skill_ids = res.scalars().all()
-    for skill_id in new_skill_ids:
-        existing_skill_dict = {}
-        existing_skill_dict['skill_id'] = skill_id
-        existing_skill_dict['creator_id'] = at.user_id
-        existing_skill_dict['candidate_id'] = candidate_id
-        existing_skills_for_insert.append(existing_skill_dict)
-    
-    stmt = insert(m.CandidateSkill).values(existing_skills_for_insert)
-    res = await session.execute(stmt)
-    await session.commit()
-
     return sch.Create.Response.Body(id=candidate_id)
 
 
@@ -155,7 +80,6 @@ async def update_candidate(id: UUID,
     '''
     Обновление данных кандидата
     '''
-
     candidate_id = id
 
     stmt = select(m.User.company_id).where(m.User.id == at.user_id)

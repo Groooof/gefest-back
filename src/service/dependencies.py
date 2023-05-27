@@ -79,3 +79,4 @@ def get_db_connection(con: asyncpg.Connection = Depends(database.connection)):
 async def get_session() -> AsyncSession:
     async with async_session() as session:
         yield session
+        await session.commit()

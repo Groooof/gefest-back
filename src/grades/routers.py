@@ -48,7 +48,7 @@ async def get_company_grades(session: AsyncSession = Depends(get_session),
     
     res = await session.scalars(select(m.Grade).where(m.Grade.company_id == company_id))
     return sch.GetCompanyGrades.Response.Body(
-        departments=[grade.Read.from_orm(orm_model) for orm_model in res.all()]
+        grades=[grade.Read.from_orm(orm_model) for orm_model in res.all()]
     )
 
 

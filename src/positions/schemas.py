@@ -8,7 +8,7 @@ from ..service.pd_models import position
 class GetCompanyPositions:
     class Response:
         class Body(BaseModel):
-            departments: tp.List[position.Read]
+            positions: tp.List[position.Read]
             
     
 class CreateCompanyPosition:

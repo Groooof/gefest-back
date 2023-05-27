@@ -48,7 +48,7 @@ async def get_company_positions(session: AsyncSession = Depends(get_session),
     
     res = await session.scalars(select(m.Position).where(m.Position.company_id == company_id))
     return sch.GetCompanyPositions.Response.Body(
-        departments=[position.Read.from_orm(orm_model) for orm_model in res.all()]
+        positions=[position.Read.from_orm(orm_model) for orm_model in res.all()]
     )
 
 

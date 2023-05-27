@@ -8,7 +8,7 @@ from ..service.pd_models import grade
 class GetCompanyGrades:
     class Response:
         class Body(BaseModel):
-            departments: tp.List[grade.Read]
+            grades: tp.List[grade.Read]
             
             
 class CreateCompanyGrade:

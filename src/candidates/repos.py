@@ -92,9 +92,6 @@ class CandidatesRepo:
         
         
     async def _update_child_entities(self, initiator_id: UUID, candidate_id: UUID, entities_list, sa_model: DeclarativeMeta):
-        if not entities_list:
-            return 
-        
         entities_ids = [entity.id for entity in entities_list if entity.id is not None]
         stmt = delete(sa_model) \
               .where(
@@ -103,6 +100,9 @@ class CandidatesRepo:
                   (sa_model.candidate_id == candidate_id)
               )
         res = await self._session.execute(stmt)
+        
+        if not entities_list:
+            return 
         
         for entity in entities_list:
             entity_dict = entity.dict(exclude_none=True)

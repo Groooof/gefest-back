@@ -9,6 +9,7 @@ from .auth.routers import router as auth_router
 from .refs.routers import router as refs_router
 from src.users.routers import router as users_router
 from src.candidates.routers import router as candidates_router
+from src.vacancies.routers import router as vacancies_router
 from src.departments.routers import router as departments_router
 from src.positions.routers import router as positions_router
 from src.grades.routers import router as grades_router
@@ -34,6 +35,7 @@ def get_app() -> FastAPI:
     app.include_router(router=refs_router)
     app.include_router(router=users_router)
     app.include_router(router=candidates_router)
+    app.include_router(router=vacancies_router)
     app.include_router(router=departments_router)
     app.include_router(router=positions_router)
     app.include_router(router=grades_router)

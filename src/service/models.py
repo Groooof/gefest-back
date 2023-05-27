@@ -186,7 +186,7 @@ class Skill(Base):
     
     id = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=sa.text("gen_random_uuid()"))
     name = sa.Column(sa.String, nullable=False)
-    normalized_name = sa.Column(sa.String, nullable=False)
+    normalized_name = sa.Column(sa.String, nullable=False, unique=True)
     company_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('companies.id'), nullable=False)
     
     company = relationship('Company',)

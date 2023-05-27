@@ -70,7 +70,7 @@ async def create(body: sch.Create.Request.Body,
                  exc.InvalidClientError,
                  exc.AccessDenied
                  ),
-            #  response_model=sch.Update.Response.Body,
+             response_model=sch.Update.Response.Body,
              dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
              )
 async def update_candidate(id: UUID,
@@ -80,64 +80,16 @@ async def update_candidate(id: UUID,
     '''
     Обновление данных кандидата
     '''
-    candidate_id = id
-
-    stmt = select(m.User.company_id).where(m.User.id == at.user_id)
-    res = await session.execute(stmt)
-    company_id = res.scalars().one()
     
-    # Update candidate ----------
-    
-    candidate_data = body.dict_candidate_only()
-    candidate_data['creator_id'] = at.user_id
-    
-    stmt = update(m.Candidate).values(candidate_data).where(m.Candidate.id == candidate_id).returning(m.Candidate.id)
-    res = await session.execute(stmt)
-    
+    candidates_repo = CandidatesRepo(session)
     try:
-        _ = res.scalars().one()
+        candidate_id = await candidates_repo.update(id, at.user_id, body)
     except sa_exc.NoResultFound:
         raise exc.InvalidClientError
+    except sa_exc.IntegrityError:
+        raise exc.InvalidRequestError
     
-    # ---------
-    
-    async def update_entities(model, entities_list):
-        entities_ids = [entity.id for entity in entities_list if entity.id is not None]
-        stmt = delete(model).where(model.id.not_in(entities_ids))
-        res = await session.execute(stmt)
-        for entity in entities_list:
-            entity_dict = entity.dict(exclude_none=True)
-            entity_dict['creator_id'] = at.user_id
-            entity_dict['candidate_id'] = candidate_id
-            stmt = insert(model) \
-                .values(**entity_dict) \
-                .on_conflict_do_update(index_elements=[model.id], set_=entity_dict)
-            await session.execute(stmt)
-    
-    await update_entities(m.CandidateContact, body.contacts)
-    await update_entities(m.CandidateWorkPlace, body.work_places)
-    await update_entities(m.CandidateLanguageAbility, body.languages)
-    await update_entities(m.CandidateNote, body.notes)
-    
-    existing_skills = [skill for skill in body.skills if isinstance(skill, sch.candidate.candidate_skill.Update)]
-    
-    new_skills_for_insert = []
-    for skill in body.skills:
-        if isinstance(skill, sch.candidate.skill.Create):
-            new_skill_dict = skill.dict()
-            new_skill_dict['normalized_name'] = skill.name.capitalize()
-            new_skill_dict['company_id'] = company_id
-            new_skills_for_insert.append(new_skill_dict)
-            
-    stmt = insert(m.Skill).values(new_skills_for_insert).returning(m.Skill.id)
-    res = await session.execute(stmt)   
-    new_skill_ids = res.scalars().all()
-    
-    existing_skills.extend([sch.candidate.candidate_skill.Update(skill_id=new_skill_id) for new_skill_id in new_skill_ids])
-    
-    await update_entities(m.CandidateSkill, existing_skills) 
-    
-    await session.commit()
+    return sch.Update.Response.Body(id=candidate_id)
 
 
 @router.get('',

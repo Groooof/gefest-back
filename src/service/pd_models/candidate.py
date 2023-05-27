@@ -35,6 +35,7 @@ class Read(BaseModel):
     grade: grade.Read
     contacts: tp.List[contact.Read] = Field(default_factory=list)
     work_places: tp.List[work_place.Read] = Field(default_factory=list)
+    total_work_expirience: tp.Optional[str]
     languages: tp.List[candidate_language.Read] = Field(default_factory=list)
     notes: tp.List[candidate_note.Read] = Field(default_factory=list)
     skills: tp.List[candidate_skill.Read] = Field(default_factory=list)

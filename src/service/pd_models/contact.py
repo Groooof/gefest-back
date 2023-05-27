@@ -4,7 +4,7 @@ import typing as tp
 
 from pydantic import BaseModel
 
-from .contact_type import Read as ContactTypeRead
+from .contact_type_ref import Read as ContactTypeRead
 
 
 class Read(BaseModel):

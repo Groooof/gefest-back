@@ -7,9 +7,9 @@ from pydantic import BaseModel, Field
 from . import (
     position,
     grade,
-    adress,
-    country,
-    family_status,
+    adress_ref,
+    country_ref,
+    family_status_ref,
     contact,
     work_place,
     candidate_language,
@@ -28,9 +28,9 @@ class Read(BaseModel):
     middle_name: tp.Optional[str]
     birth_date: tp.Optional[date]
     min_salary: tp.Optional[int]
-    adress: tp.Optional[adress.Read]
-    citizenship: tp.Optional[country.Read]
-    family_status: tp.Optional[family_status.Read]
+    adress: tp.Optional[adress_ref.Read]
+    citizenship: tp.Optional[country_ref.Read]
+    family_status: tp.Optional[family_status_ref.Read]
     position: position.Read
     grade: grade.Read
     contacts: tp.List[contact.Read] = Field(default_factory=list)

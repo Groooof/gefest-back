@@ -4,8 +4,8 @@ import typing as tp
 
 from pydantic import BaseModel
 
-from .language import Read as LanguageRead
-from .language_level import Read as LanguageLevelRead
+from .language_ref import Read as LanguageRead
+from .language_level_ref import Read as LanguageLevelRead
 
 
 class Read(BaseModel):

@@ -80,7 +80,7 @@ async def login(response: Response,
     if user.password != body.password:
         raise exc.InvalidClientError
 
-    at = AccessTokenFactory.create(user.id, user.role.sys_name)    
+    at = AccessTokenFactory.create(user.id, user.role.sys_name, user.company_id)    
     rt = RefreshTokenFactory.create()
     
     stmt = insert(m.RefreshToken).values(user_id=user.id, token=str(rt), expires_at=dt.datetime.now() + config.REFRESH_TOKEN_LIFETIME)

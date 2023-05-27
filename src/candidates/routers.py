@@ -140,3 +140,30 @@ async def get_list(query: Query = Depends(sch.GetList.Request.Query),
     candidates_repo = CandidatesRepo(session)
     candidates = await candidates_repo.get_list(company_id=at.company_id, **query.dict())
     return sch.GetList.Response.Body(candidates=candidates, count=len(candidates))
+
+
+@router.delete('/{id}',
+               name='Удаление кандидата',
+                responses=generate_openapi_responses(
+                    exc.InvalidRequestError,
+                    exc.InvalidTokenError,
+                    exc.ExpiredTokenError,
+                    exc.InvalidClientError
+                    ),
+                response_model=sch.Delete.Response.Body,
+                dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
+                )
+async def delete(id: UUID,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
+    '''
+    Удаление кандидата с указанным id
+    '''
+    
+    candidates_repo = CandidatesRepo(session)
+    try:
+        candidate_id = await candidates_repo.delete(id, at.company_id)
+    except sa_exc.NoResultFound:
+        raise exc.InvalidClientError
+    
+    return sch.Delete.Response.Body(id=candidate_id)

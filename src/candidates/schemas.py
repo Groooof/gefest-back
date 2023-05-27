@@ -50,4 +50,10 @@ class Update:
     class Response:
         class Body(BaseModel):
             id: UUID
+            
+            
+class Delete:
+    class Response:
+        class Body(BaseModel):
+            id: UUID
 

@@ -39,6 +39,8 @@ class CandidatesRepo:
                    (m.Candidate.id == id)
                    &
                    (m.User.company_id == company_id)
+                   &
+                   (m.Candidate.is_deleted == False)
                 )
         res = await self._session.scalars(stmt)
         
@@ -74,7 +76,11 @@ class CandidatesRepo:
                selectinload(m.Candidate.work_places),
                ) \
            .join(m.Candidate.creator) \
-           .where(m.User.company_id == company_id) \
+           .where(
+               (m.User.company_id == company_id)
+               &
+               (m.Candidate.is_deleted == False)
+            ) \
            .order_by(m.Candidate.created_at.desc())
         
         if first_name is not None:
@@ -98,6 +104,25 @@ class CandidatesRepo:
         candidates_orm = res.all()
         return [candidate.Read.from_orm(candidate_orm) for candidate_orm in candidates_orm]
     
+    async def delete(self, id: UUID, company_id: UUID) -> UUID:
+        # TODO: check company id
+        stmt = update(m.Candidate) \
+               .where(
+                   (m.Candidate.id == id)
+                   &
+                   (m.Candidate.is_deleted == False)
+                ) \
+               .values(is_deleted=True) \
+               .returning(m.Candidate.id)
+               
+        res = await self._session.scalars(stmt)
+        try:
+            candidate_id = res.one()
+        except sa_exc.NoResultFound:
+            raise #  TODO: custom exceptions
+        
+        return candidate_id
+
     
     async def add(self, initiator_id: UUID, pd_model: candidate.Create) -> UUID:
         stmt = select(m.User.company_id).where(m.User.id == initiator_id)
@@ -148,7 +173,14 @@ class CandidatesRepo:
         candidate_data = pd_model.dict_candidate_only()
         candidate_data['creator_id'] = initiator_id
         
-        stmt = update(m.Candidate).values(candidate_data).where(m.Candidate.id == candidate_id).returning(m.Candidate.id)
+        stmt = update(m.Candidate) \
+               .values(candidate_data) \
+               .where(
+                   (m.Candidate.id == candidate_id)
+                   &
+                   (m.Candidate.is_deleted == False)
+                ) \
+               .returning(m.Candidate.id)
         res = await  self._session.execute(stmt)
         
         try:

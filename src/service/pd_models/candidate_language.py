@@ -35,5 +35,15 @@ class Create(BaseModel):
         
 class Update(BaseModel):
     id: tp.Optional[UUID]
-    language_code: tp.Optional[int]
-    language_level_code: tp.Optional[int]
+    language_code: int
+    language_level_code: int
+    
+    class Config:
+        schema_extra = {
+            "title": "CandidateLanguageUpdate",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000005',
+                'language_code': 2,
+                'language_level_code': 4
+            }
+        }

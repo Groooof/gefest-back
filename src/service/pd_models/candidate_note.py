@@ -33,4 +33,14 @@ class Create(BaseModel):
     
 class Update(BaseModel):
     id: tp.Optional[UUID]
-    note: tp.Optional[str]
+    note: str
+
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "title": "CandidateNoteUpdate",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000005',
+                'note': 'Текст примечания'
+            }
+        }

@@ -30,4 +30,13 @@ class Create(BaseModel):
         
 class Update(BaseModel):
     id: tp.Optional[UUID]
-    skill_id: tp.Optional[UUID]
+    skill_id: UUID
+    
+    class Config:
+        schema_extra = {
+            "title": "CandidateSkillUpdate",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000005',
+                'skill_id': '00000000-0000-0000-0000-000000000012'
+            }
+        }

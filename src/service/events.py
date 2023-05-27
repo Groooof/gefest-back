@@ -50,8 +50,8 @@ async def on_startup() -> None:
     ]
     
     async with engine.begin() as conn:
-        await conn.run_sync(m.Base.metadata.drop_all)
-        await conn.run_sync(m.Base.metadata.create_all)
+        # await conn.run_sync(m.Base.metadata.drop_all)
+        # await conn.run_sync(m.Base.metadata.create_all)
 
         refs_loader = RefsLoader(conn)
         await refs_loader.load('./sql/refs.sql')

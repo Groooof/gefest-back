@@ -29,3 +29,14 @@ class GetList:
     class Response:
         class Body(BaseModel):
             candidates: tp.List[candidate.Read] = Field(default_factory=list)
+
+
+class Update:
+    class Request:
+        class Body(candidate.Update):
+            ...
+
+    class Response:
+        class Body(BaseModel):
+            id: UUID
+

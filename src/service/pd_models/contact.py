@@ -8,6 +8,7 @@ from .contact_type import Read as ContactTypeRead
 
 
 class Read(BaseModel):
+    id: UUID
     type: ContactTypeRead
     value: str
     is_priority: bool
@@ -35,5 +36,18 @@ class Create(BaseModel):
 
 
 class Update(BaseModel):
+    id: tp.Optional[UUID]
+    type_code: int
     value: tp.Optional[str]
     is_priority: tp.Optional[bool] = False
+
+    class Config:
+        schema_extra = {
+            "title": "ContactUpdate",
+            "example": {
+                'id': '00000000-0000-0000-0000-000000000011',
+                'type_code': 1,
+                'value': '79781112233',
+                'is_priority': False
+            }
+        }

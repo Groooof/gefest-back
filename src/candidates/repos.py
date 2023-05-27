@@ -1,9 +1,12 @@
 from uuid import UUID
+from datetime import date
+import typing as tp
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import delete, update
 from sqlalchemy.orm.decl_api import DeclarativeMeta
+from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy import exc as sa_exc
 
 from ..service import models as m
@@ -16,6 +19,76 @@ from ..skills.repos import SkillsRepo
 class CandidatesRepo:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+    
+    async def get_one(self, id: UUID, company_id: UUID) -> candidate.Read:
+        stmt = select(m.Candidate) \
+               .options(
+                   selectinload(m.Candidate.position),
+                   selectinload(m.Candidate.grade),
+                   selectinload(m.Candidate.adress),
+                   selectinload(m.Candidate.citizenship),
+                   selectinload(m.Candidate.family_status),
+                   selectinload(m.Candidate.contacts),
+                   selectinload(m.Candidate.languages),
+                   selectinload(m.Candidate.notes),
+                   selectinload(m.Candidate.skills),
+                   selectinload(m.Candidate.work_places),
+                ) \
+                .join(m.Candidate.creator) \
+                .where(
+                   (m.Candidate.id == id)
+                   &
+                   (m.User.company_id == company_id)
+                )
+        res = await self._session.scalars(stmt)
+        
+        try:
+            candidate_orm = res.one()
+        except sa_exc.NoResultFound:
+            raise #  TODO: custom exceptions
+        
+        return candidate.Read.from_orm(candidate_orm)
+        
+    async def get_list(self,
+                       company_id: UUID,
+                       date_from: tp.Optional[date],
+                       date_to: tp.Optional[date],
+                       position_id: tp.Optional[UUID],
+                       salary_from: tp.Optional[int],
+                       salary_to: tp.Optional[int]) -> tp.List[candidate.Read]:
+        
+        stmt = select(m.Candidate) \
+           .options(
+               selectinload(m.Candidate.position),
+               selectinload(m.Candidate.grade),
+               selectinload(m.Candidate.adress),
+               selectinload(m.Candidate.citizenship),
+               selectinload(m.Candidate.family_status),
+               selectinload(m.Candidate.contacts),
+               selectinload(m.Candidate.languages),
+               selectinload(m.Candidate.notes),
+               selectinload(m.Candidate.skills),
+               selectinload(m.Candidate.work_places),
+               ) \
+           .join(m.Candidate.creator) \
+           .where(m.User.company_id == company_id) \
+           .order_by(m.Candidate.created_at.desc())
+        
+        if date_from is not None:
+            stmt = stmt.filter(m.Candidate.created_at >= date_from)
+        if date_to is not None:
+            stmt = stmt.filter(m.Candidate.created_at <= date_to)
+        if position_id is not None:
+            stmt = stmt.filter(m.Candidate.position_id == position_id)
+        if salary_from is not None:
+            stmt = stmt.filter(m.Candidate.min_salary >= salary_from)
+        if salary_to is not None:
+            stmt = stmt.filter(m.Candidate.min_salary <= salary_to)
+        
+        res = await self._session.scalars(stmt)
+        candidates_orm = res.all()
+        return [candidate.Read.from_orm(candidate_orm) for candidate_orm in candidates_orm]
+    
     
     async def add(self, initiator_id: UUID, pd_model: candidate.Create) -> UUID:
         stmt = select(m.User.company_id).where(m.User.id == initiator_id)
@@ -89,7 +162,6 @@ class CandidatesRepo:
         await self._update_child_entities(initiator_id, candidate_id, pd_model.languages, m.CandidateLanguageAbility)
         await self._update_child_entities(initiator_id, candidate_id, pd_model.notes, m.CandidateNote)
         return candidate_id
-        
         
     async def _update_child_entities(self, initiator_id: UUID, candidate_id: UUID, entities_list, sa_model: DeclarativeMeta):
         entities_ids = [entity.id for entity in entities_list if entity.id is not None]

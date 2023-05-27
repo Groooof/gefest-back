@@ -1,5 +1,6 @@
 from uuid import UUID
 import typing as tp
+from datetime import date
 
 from pydantic import BaseModel, Field
 
@@ -16,14 +17,20 @@ class Create:
             id: UUID
 
 
+class GetOne:
+    class Response:
+        class Body(candidate.Read):
+            ...
+
+
 class GetList:
     class Request:
         class Query(BaseModel):
-            first_name: tp.Optional[str]
-            last_name: tp.Optional[str]
-            middle_name: tp.Optional[str]
+            date_from: tp.Optional[date]
+            date_to: tp.Optional[date]
             position_id: tp.Optional[UUID]
-            recruiter_id: tp.Optional[UUID]
+            salary_from: tp.Optional[int]
+            salary_to: tp.Optional[int]
             
     
     class Response:

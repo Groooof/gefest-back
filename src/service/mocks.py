@@ -336,6 +336,7 @@ vacancies = [
         "salary_to": 130000,
         "deadline": dt.strptime("2023-07-20", "%Y-%m-%d"),
         "adress_code": 33,
+        "status_code": 2,
         "project": "GefestPRO",
         "creator_id": "00000000-0000-0000-0000-000000000001",
         "company_id": "00000000-0000-0000-0000-000000000000"
@@ -351,6 +352,7 @@ vacancies = [
         "salary_to": 150000,
         "deadline": dt.strptime("2023-10-01", "%Y-%m-%d"),
         "adress_code": 33,
+        "status_code": 2,
         "project": "GefestPRO",
         "creator_id": "00000000-0000-0000-0000-000000000001",
         "company_id": "00000000-0000-0000-0000-000000000000"

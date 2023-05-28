@@ -55,6 +55,8 @@ class VacanciesRepo:
             stmt = stmt.filter(m.Vacancy.priority_code == filters.priority_code)
         if filters.adress_code is not None:
             stmt = stmt.filter(m.Vacancy.adress_code == filters.adress_code)
+        if filters.status_code is not None:
+            stmt = stmt.filter(m.Vacancy.status_code == filters.status_code)
         if filters.date_from is not None:
             stmt = stmt.filter(m.Vacancy.created_at >= filters.date_from)
         if filters.date_to is not None:
@@ -94,6 +96,7 @@ class VacanciesRepo:
         vacancy_data = pd_model.dict_vacancy_only()
         vacancy_data['creator_id'] = initiator_id
         vacancy_data['company_id'] = company_id
+        vacancy_data['status_code'] = 1
         
         stmt = insert(m.Vacancy).values(vacancy_data).returning(m.Vacancy.id)
         res = await self._session.execute(stmt)

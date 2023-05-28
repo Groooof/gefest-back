@@ -11,7 +11,8 @@ from . import (
     adress_ref,
     vacancy_skill,
     skill,
-    vacancy_priority_ref
+    vacancy_priority_ref,
+    vacancy_status_ref
 )
 
 
@@ -22,6 +23,7 @@ class Filters(BaseModel):
     grade_id: tp.Optional[UUID]
     priority_code: tp.Optional[int]
     adress_code: tp.Optional[int]
+    status_code: tp.Optional[int]
     date_from: tp.Optional[date]
     date_to: tp.Optional[date]
     salary_from: tp.Optional[int]
@@ -41,6 +43,7 @@ class Read(BaseModel):
     deadline: tp.Optional[date]
     recruiter_id: tp.Optional[UUID]
     adress: tp.Optional[adress_ref.Read]
+    status: vacancy_status_ref.Read
     project: tp.Optional[str]
     skills: tp.List[vacancy_skill.Read] = Field(default_factory=list)
     creator_id: UUID
@@ -98,6 +101,7 @@ class Update(BaseModel):
     salary_to: tp.Optional[int]
     deadline: tp.Optional[date]
     adress_code: tp.Optional[int]
+    status_code: int
     project: tp.Optional[str]
     recruiter_id: tp.Optional[UUID]
     skills: tp.List[tp.Union[skill.Create, vacancy_skill.Update]] = Field(default_factory=list)
@@ -115,6 +119,7 @@ class Update(BaseModel):
                 'salary_to': 90000,
                 'deadline': '2023-06-15',
                 'adress_code': 33,
+                'status_code': 1,
                 'project': 'GefestPRO',
                 'recruiter_id': '00000000-0000-0000-0000-000000000001',
                 'skills': [

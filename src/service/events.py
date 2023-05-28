@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from .refs_loader import RefsLoader
+from .mocks_loader import MocksLoader
 from .database import database, engine, async_session
 from . import models as m
 from ..config import postgres_env, POSTGRES_DSN
@@ -52,9 +53,10 @@ async def on_startup() -> None:
     async with engine.begin() as conn:
         # await conn.run_sync(m.Base.metadata.drop_all)
         # await conn.run_sync(m.Base.metadata.create_all)
-
         refs_loader = RefsLoader(conn)
-        await refs_loader.load('./sql/refs.sql')
+        await refs_loader.load('./data/refs.sql')
+        mocks_loader = MocksLoader(conn)
+        await mocks_loader.load()
         await conn.execute(insert(m.Company).values(test_company).on_conflict_do_nothing())
         await conn.execute(insert(m.Department).values(test_departments).on_conflict_do_nothing())
         await conn.execute(insert(m.Position).values(test_positions).on_conflict_do_nothing())

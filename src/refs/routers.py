@@ -55,7 +55,7 @@ async def vacancy_priorities(session: AsyncSession = Depends(get_session),
     return sch.GetRefsResponse(data=[sch.Ref.from_orm(orm_model) for orm_model in res.all()])
 
 
-@router.get('/adresses',
+@router.get('/addresses',
              responses=generate_openapi_responses(
                  exc.InvalidRequestError,
                  exc.InvalidTokenError,

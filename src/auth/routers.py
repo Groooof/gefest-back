@@ -33,7 +33,7 @@ from ..service.tokens import (
 from . import schemas as sch
 
 
-router = APIRouter(tags=['sessions'], prefix='/session')
+router = APIRouter(tags=['sessions'], prefix='/sessions')
 
 
 @router.post('/protected',

@@ -77,13 +77,13 @@ async def login(response: Response,
     except sa_exc.NoResultFound:
         raise exc.InvalidClientError
     
-    if user.fails_count >= config.MAX_AUTH_FAILED_COUNT:
-        raise exc.AccountBlockedError
+    # if user.fails_count >= config.MAX_AUTH_FAILED_COUNT:
+    #     raise exc.AccountBlockedError
     
     if user.password != body.password:
-        stmt = update(m.User).values(fails_count=user.fails_count + 1).where(m.User.id == user.id)
-        await session.execute(stmt)
-        await session.commit()
+        # stmt = update(m.User).values(fails_count=user.fails_count + 1).where(m.User.id == user.id)
+        # await session.execute(stmt)
+        # await session.commit()
         raise exc.InvalidClientError
 
     at = AccessTokenFactory.create(user.id, user.role.sys_name, user.company_id)    

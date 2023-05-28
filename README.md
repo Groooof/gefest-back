@@ -11,6 +11,16 @@
 | :-------- | :-------|
 | `admin`   | `admin` |
 
+### Используемый стэк
+
+**Python** |
+**FastAPI** |
+**Sqlalchemy** |
+**PostgreSQL** |
+**Docker** |
+**Docker-compose** |
+**Dokku** 
+
 ### Инструкция по развертыванию
 #### Локально 
 

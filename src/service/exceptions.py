@@ -19,6 +19,12 @@ class InvalidTokenError(CustomHTTPException):
     error_description = 'Invalid token'
     
 
+class AccountBlockedError(CustomHTTPException):
+    status_code = 401
+    error = 'account_blocked'
+    error_description = 'Account blocked'
+    
+
 class ExpiredTokenError(CustomHTTPException):
     status_code = 401
     error = 'expired_token'

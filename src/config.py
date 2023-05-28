@@ -42,3 +42,5 @@ REFRESH_TOKEN_NAME = 'rt'
 
 ACCESS_TOKEN_LIFETIME = dt.timedelta(minutes=15)
 REFRESH_TOKEN_LIFETIME = dt.timedelta(days=1)
+
+MAX_AUTH_FAILED_COUNT = 5

@@ -149,6 +149,7 @@ class User(Base):
     id = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=sa.text("gen_random_uuid()"))
     username = sa.Column(sa.String, nullable=False, unique=True)
     password = sa.Column(PasswordType(schemes=['pbkdf2_sha512']), nullable=False)
+    fails_count = sa.Column(sa.Integer, default=0, server_default=sa.text("0"))
     role_code = sa.Column(sa.Integer, sa.ForeignKey('roles_ref.code'), nullable=False)
     company_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('companies.id'), nullable=False)
     department_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('departments.id'))

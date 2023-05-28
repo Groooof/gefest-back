@@ -1,20 +1,21 @@
 from uuid import UUID
-from datetime import date
 import typing as tp
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import delete, update
 from sqlalchemy.orm.decl_api import DeclarativeMeta
-from sqlalchemy.orm import selectinload
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.functions import coalesce
+from sqlalchemy.future import select
+from sqlalchemy import delete, update
 from sqlalchemy import exc as sa_exc
 
-from ..service import models as m
-from ..service.pd_models import vacancy
-from ..service.pd_models import vacancy_skill
-from ..service.pd_models import skill
 from ..skills.repos import SkillsRepo
+from ..service import models as m
+from ..service.pd_models import (
+    vacancy,
+    vacancy_skill,
+    skill
+)
 
 
 class VacanciesRepo:
@@ -23,26 +24,13 @@ class VacanciesRepo:
     
     async def get_one(self, id: UUID, company_id: UUID) -> vacancy.Read:
         stmt = select(m.Vacancy) \
-               .options(
-                   selectinload(m.Vacancy.department),
-                   selectinload(m.Vacancy.position),
-                   selectinload(m.Vacancy.grade),
-                   selectinload(m.Vacancy.priority),
-                   selectinload(m.Vacancy.adress),
-                   selectinload(m.Vacancy.skills),
-                ) \
-                .join(m.Vacancy.creator) \
-                .where(
-                   (m.Vacancy.id == id)
-                   &
-                   (m.User.company_id == company_id)
-                   &
-                   (m.Vacancy.is_deleted == False)
-                )
-        res = await self._session.scalars(stmt)
-        
+               .join(m.Vacancy.creator) \
+               .where(m.Vacancy.id == id) \
+               .where(m.User.company_id == company_id) \
+               .where(m.Vacancy.is_deleted == False)
+               
         try:
-            vacancy_orm = res.one()
+            vacancy_orm = (await self._session.scalars(stmt)).one()
         except sa_exc.NoResultFound:
             raise #  TODO: custom exceptions
         
@@ -50,21 +38,10 @@ class VacanciesRepo:
         
     async def get_list(self, company_id: UUID, filters: vacancy.Filters) -> tp.List[vacancy.Read]:
         stmt = select(m.Vacancy) \
-           .options(
-               selectinload(m.Vacancy.department),
-               selectinload(m.Vacancy.position),
-               selectinload(m.Vacancy.grade),
-               selectinload(m.Vacancy.priority),
-               selectinload(m.Vacancy.adress),
-               selectinload(m.Vacancy.skills),
-               ) \
-           .join(m.Vacancy.creator) \
-           .where(
-               (m.User.company_id == company_id)
-               &
-               (m.Vacancy.is_deleted == False)
-            ) \
-           .order_by(m.Vacancy.created_at.desc())
+               .join(m.Vacancy.creator) \
+               .where(m.User.company_id == company_id) \
+               .where(m.Vacancy.is_deleted == False) \
+               .order_by(m.Vacancy.created_at.desc())
         
         if filters.recruiter_id is not None:
             stmt = stmt.filter(m.Vacancy.recruiter_id == filters.recruiter_id)
@@ -92,23 +69,18 @@ class VacanciesRepo:
         #     stmt = stmt.filter(m.Vacancy)
         
         res = await self._session.scalars(stmt)
-        vacancies_orm = res.all()
-        return [vacancy.Read.from_orm(vacancy_orm) for vacancy_orm in vacancies_orm]
+        return [vacancy.Read.from_orm(vacancy_orm) for vacancy_orm in res.all()]
     
     async def delete(self, id: UUID, company_id: UUID) -> UUID:
         # TODO: check company id
         stmt = update(m.Vacancy) \
-               .where(
-                   (m.Vacancy.id == id)
-                   &
-                   (m.Vacancy.is_deleted == False)
-                ) \
+               .where(m.Vacancy.id == id) \
+               .where(m.Vacancy.is_deleted == False) \
                .values(is_deleted=True) \
                .returning(m.Vacancy.id)
                
-        res = await self._session.scalars(stmt)
         try:
-            vacancy_id = res.one()
+            vacancy_id = (await self._session.scalars(stmt)).one()
         except sa_exc.NoResultFound:
             raise #  TODO: custom exceptions
         
@@ -163,16 +135,12 @@ class VacanciesRepo:
         
         stmt = update(m.Vacancy) \
                .values(vacancy_data) \
-               .where(
-                   (m.Vacancy.id == vacancy_id)
-                   &
-                   (m.Vacancy.is_deleted == False)
-                ) \
+               .where(m.Vacancy.id == vacancy_id) \
+               .where(m.Vacancy.is_deleted == False) \
                .returning(m.Vacancy.id)
-        res = await  self._session.execute(stmt)
         
         try:
-            _ = res.scalars().one()
+            (await self._session.scalars(stmt)).one()
         except (sa_exc.NoResultFound, sa_exc.IntegrityError):
             raise #  TODO: custom exceptions
         
@@ -191,12 +159,10 @@ class VacanciesRepo:
     async def _update_child_entities(self, initiator_id: UUID, vacancy_id: UUID, entities_list, sa_model: DeclarativeMeta):
         entities_ids = [entity.id for entity in entities_list if entity.id is not None]
         stmt = delete(sa_model) \
-              .where(
-                  (sa_model.id.not_in(entities_ids))
-                  &
-                  (sa_model.vacancy_id == vacancy_id)
-              )
-        res = await self._session.execute(stmt)
+              .where(sa_model.id.not_in(entities_ids)) \
+              .where(sa_model.vacancy_id == vacancy_id)
+        
+        await self._session.execute(stmt)
         
         if not entities_list:
             return 
@@ -206,8 +172,8 @@ class VacanciesRepo:
             entity_dict['creator_id'] = initiator_id
             entity_dict['vacancy_id'] = vacancy_id
             stmt = insert(sa_model) \
-                .values(**entity_dict) \
-                .on_conflict_do_update(index_elements=[sa_model.id],
-                                       where=(sa_model.vacancy_id == vacancy_id),
-                                       set_=entity_dict)
+                   .values(**entity_dict) \
+                   .on_conflict_do_update(index_elements=[sa_model.id],
+                                          where=(sa_model.vacancy_id == vacancy_id),
+                                          set_=entity_dict)
             await self._session.execute(stmt)

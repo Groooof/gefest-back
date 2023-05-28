@@ -1,5 +1,5 @@
-import typing as tp
 from uuid import UUID
+import typing as tp
 
 from pydantic import BaseModel
 
@@ -16,25 +16,25 @@ class Create:
             id: UUID
                 
             
-class GetSelfInfo:
+class GetSelf:
     class Response:
         class Body(user.Read):
             ...
 
 
-class GetUserInfo:
+class GetOne:
     class Response:
         class Body(user.Read):
             ...
 
 
-class GetCompanyUsersInfo:
+class GetList:
     class Response:
         class Body(BaseModel):
             users: tp.List[user.Read]
 
 
-class DeleteUser:            
+class Delete:
     class Response:
         class Body(BaseModel):
             id: UUID

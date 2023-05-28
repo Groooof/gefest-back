@@ -1,4 +1,3 @@
-import typing as tp
 import datetime as dt
 from uuid import UUID
 from fastapi import (
@@ -8,30 +7,22 @@ from fastapi import (
 )
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import delete, update
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy import exc as sa_exc
 
-from ..service import models as m
-
+from ..service.fastapi_custom import generate_openapi_responses
+from ..service import exceptions as exc
 from ..service.roles import Roles
 from ..service.dependencies import (
     AccessJWTCookie,
     CheckRoles,
     get_session
 )
-
-from . import schemas as sch
 from ..service.tokens import (
     AccessToken,
 )
 
-from ..service import exceptions as exc
-from ..service.fastapi_custom import generate_openapi_responses
-
 from .repos import CandidatesRepo
+from . import schemas as sch
 
 
 router = APIRouter(tags=['candidates'], prefix='/candidates')
@@ -77,10 +68,10 @@ async def create(body: sch.Create.Request.Body,
              response_model=sch.Update.Response.Body,
              dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
              )
-async def update_candidate(id: UUID,
-                           body: sch.Update.Request.Body,
-                           session: AsyncSession = Depends(get_session),
-                           at: AccessToken = Depends(AccessJWTCookie())):
+async def update(id: UUID,
+                 body: sch.Update.Request.Body,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
     '''
     Обновление данных кандидата
     '''
@@ -105,7 +96,7 @@ async def update_candidate(id: UUID,
                  exc.InvalidClientError
                  ),
              response_model=sch.GetOne.Response.Body,
-             dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
+             dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin, Roles.customer))]
              )
 async def get_one(id: UUID,
                   session: AsyncSession = Depends(get_session),
@@ -120,6 +111,8 @@ async def get_one(id: UUID,
     except sa_exc.NoResultFound:
         raise exc.InvalidClientError
     
+    # TODO: перенести в sql
+    # подсчет общего стажа работы кандидата
     total_exp = 0
     for place in candidate.work_places:
         exp = (place.work_to or dt.datetime.now()) - place.work_from
@@ -138,7 +131,7 @@ async def get_one(id: UUID,
                  exc.InvalidClientError
                  ),
              response_model=sch.GetList.Response.Body,
-             dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
+             dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin, Roles.customer))]
              )
 async def get_list(query: Query = Depends(sch.GetList.Request.Query),
                    session: AsyncSession = Depends(get_session),
@@ -148,7 +141,9 @@ async def get_list(query: Query = Depends(sch.GetList.Request.Query),
     '''
     
     candidates_repo = CandidatesRepo(session)
-    candidates = await candidates_repo.get_list(company_id=at.company_id, **query.dict())
+    candidates = await candidates_repo.get_list(company_id=at.company_id, filters=query)
+    # TODO: перенести в sql
+    # подсчет общего стажа работы кандидата
     for candidate in candidates:
         total_exp = 0
         for place in candidate.work_places:

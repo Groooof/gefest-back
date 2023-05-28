@@ -3,3 +3,4 @@ class Roles:
     employee = 'employee'
     manager = 'manager'
     recruiter = 'recruiter'
+    customer = 'customer'

@@ -40,6 +40,5 @@ JWT_ALG = 'HS256'
 ACCESS_TOKEN_NAME = 'at'
 REFRESH_TOKEN_NAME = 'rt'
 
-ACCESS_TOKEN_LIFETIME = dt.timedelta(minutes=59)
-# ACCESS_TOKEN_LIFETIME = dt.timedelta(seconds=5)
-REFRESH_TOKEN_LIFETIME = dt.timedelta(days=7)
+ACCESS_TOKEN_LIFETIME = dt.timedelta(minutes=15)
+REFRESH_TOKEN_LIFETIME = dt.timedelta(days=1)

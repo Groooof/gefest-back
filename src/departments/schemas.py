@@ -1,17 +1,18 @@
-from pydantic import BaseModel
 from uuid import UUID
 import typing as tp
+
+from pydantic import BaseModel
 
 from ..service.pd_models import department
 
 
-class GetCompanyDepartments:
+class GetList:
     class Response:
         class Body(BaseModel):
             departments: tp.List[department.Read]
             
             
-class CreateCompanyDepartment:
+class Create:
     class Request:
         class Body(department.Create):
             ...
@@ -21,7 +22,7 @@ class CreateCompanyDepartment:
             id: UUID
             
             
-class DeleteCompanyDepartment:
+class Delete:
     class Response:
         class Body(BaseModel):
             id: UUID

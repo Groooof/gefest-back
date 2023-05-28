@@ -1,6 +1,5 @@
 from uuid import UUID
 import typing as tp
-from datetime import date
 
 from pydantic import BaseModel, Field
 

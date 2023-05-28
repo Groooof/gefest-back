@@ -4,27 +4,25 @@ from fastapi import (
     Depends
 )
 
-from sqlalchemy.future import select
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import insert as _insert
+from sqlalchemy.future import select as _select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete as _delete
 from sqlalchemy.orm import exc as sa_exc
 
+from ..service.fastapi_custom import generate_openapi_responses
+from ..service import exceptions as exc
+from ..service.pd_models import grade
 from ..service import models as m
 from ..service.dependencies import (
     AccessJWTCookie,
     get_session
 )
-
-from . import schemas as sch
 from ..service.tokens import (
     AccessToken,
 )
 
-from ..service import exceptions as exc
-from ..service.fastapi_custom import generate_openapi_responses
-
-from ..service.pd_models import grade
+from . import schemas as sch
 
 
 router = APIRouter(tags=['grades'], prefix='/grades')
@@ -37,19 +35,15 @@ router = APIRouter(tags=['grades'], prefix='/grades')
                  exc.ExpiredTokenError,
                  exc.InvalidClientError
                  ),
-             response_model=sch.GetCompanyGrades.Response.Body
+             response_model=sch.GetList.Response.Body
              )
-async def get_company_grades(session: AsyncSession = Depends(get_session),
-                             at: AccessToken = Depends(AccessJWTCookie())):
+async def get_list(session: AsyncSession = Depends(get_session),
+                   at: AccessToken = Depends(AccessJWTCookie())):
     
-    stmt = select(m.User.company_id).where(m.User.id == at.user_id)
+    stmt = _select(m.Grade).where(m.Grade.company_id == at.company_id)
     res = await session.scalars(stmt)
-    company_id = res.one()
-    
-    res = await session.scalars(select(m.Grade).where(m.Grade.company_id == company_id))
-    return sch.GetCompanyGrades.Response.Body(
-        grades=[grade.Read.from_orm(orm_model) for orm_model in res.all()]
-    )
+    grades = [grade.Read.from_orm(orm_model) for orm_model in res.all()]
+    return sch.GetList.Response.Body(grades=grades)
 
 
 @router.post('',
@@ -59,15 +53,15 @@ async def get_company_grades(session: AsyncSession = Depends(get_session),
                  exc.ExpiredTokenError,
                  exc.InvalidClientError
                  ),
-             response_model=sch.CreateCompanyGrade.Response.Body
+             response_model=sch.Create.Response.Body
              )
-async def create_company_grade(body: sch.CreateCompanyGrade.Request.Body,
-                               session: AsyncSession = Depends(get_session),
-                               at: AccessToken = Depends(AccessJWTCookie())):
+async def create(body: sch.Create.Request.Body,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
     
-    stmt = insert(m.Grade).values(company_id=at.company_id, **body.dict()).returning(m.Grade.id)
-    res = await session.execute(stmt)
-    return sch.CreateCompanyGrade.Response.Body(id=res.scalars().one())
+    stmt = _insert(m.Grade).values(company_id=at.company_id, **body.dict()).returning(m.Grade.id)
+    grade_id = await session.scalar(stmt)
+    return sch.Create.Response.Body(id=grade_id)
 
 
 @router.delete('/{id}',
@@ -77,21 +71,21 @@ async def create_company_grade(body: sch.CreateCompanyGrade.Request.Body,
                    exc.ExpiredTokenError,
                    exc.InvalidClientError
                    ),
-               response_model=sch.DeleteCompanyGrade.Response.Body
+               response_model=sch.Delete.Response.Body
                )
-async def delete_company_grade(id: UUID,
-                               session: AsyncSession = Depends(get_session),
-                               at: AccessToken = Depends(AccessJWTCookie())):
+async def delete(id: UUID,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
     
-    stmt = delete(m.Grade).where(
-        (m.Grade.id == id) 
-        &
-        (m.Grade.company_id == at.company_id)
-    ).returning(m.Grade.id)
-    res = await session.execute(stmt)
+    stmt = _delete(m.Grade) \
+           .where(m.Grade.id == id) \
+           .where(m.Grade.company_id == at.company_id) \
+           .returning(m.Grade.id)
+           
     try:
-        grade_id = res.scalars().one()
+        grade_id = (await session.scalars(stmt)).one()
     except sa_exc.NoResultFound:
         raise exc.InvalidClientError
-    return sch.DeleteCompanyGrade.Response.Body(id=grade_id)
+    
+    return sch.Delete.Response.Body(id=grade_id)
 

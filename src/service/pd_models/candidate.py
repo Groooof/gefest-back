@@ -19,6 +19,17 @@ from . import (
 )
 
 
+class Filters(BaseModel):
+    first_name: tp.Optional[str]
+    last_name: tp.Optional[str]
+    middle_name: tp.Optional[str]
+    date_from: tp.Optional[date]
+    date_to: tp.Optional[date]
+    position_id: tp.Optional[UUID]
+    salary_from: tp.Optional[int]
+    salary_to: tp.Optional[int]
+
+
 class Read(BaseModel):
     id: UUID
     creator_id: UUID

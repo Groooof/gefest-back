@@ -1,4 +1,3 @@
-import typing as tp
 from uuid import UUID
 from fastapi import (
     APIRouter,
@@ -7,30 +6,22 @@ from fastapi import (
 )
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import delete, update
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy import exc as sa_exc
 
-from ..service import models as m
-
+from ..service.fastapi_custom import generate_openapi_responses
+from ..service import exceptions as exc
 from ..service.roles import Roles
 from ..service.dependencies import (
     AccessJWTCookie,
     CheckRoles,
     get_session
 )
-
-from . import schemas as sch
 from ..service.tokens import (
     AccessToken,
 )
 
-from ..service import exceptions as exc
-from ..service.fastapi_custom import generate_openapi_responses
-
 from .repos import VacanciesRepo
+from . import schemas as sch
 
 
 router = APIRouter(tags=['vacancies'], prefix='/vacancies')
@@ -65,21 +56,21 @@ async def create(body: sch.Create.Request.Body,
 
 
 @router.patch('/{id}',
-             name='Обновление данных вакансии',
-             responses=generate_openapi_responses(
-                 exc.InvalidRequestError,
-                 exc.InvalidTokenError,
-                 exc.ExpiredTokenError,
-                 exc.InvalidClientError,
-                 exc.AccessDenied
-                 ),
-             response_model=sch.Update.Response.Body,
-             dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
-             )
-async def update_candidate(id: UUID,
-                           body: sch.Update.Request.Body,
-                           session: AsyncSession = Depends(get_session),
-                           at: AccessToken = Depends(AccessJWTCookie())):
+              name='Обновление данных вакансии',
+              responses=generate_openapi_responses(
+                  exc.InvalidRequestError,
+                  exc.InvalidTokenError,
+                  exc.ExpiredTokenError,
+                  exc.InvalidClientError,
+                  exc.AccessDenied
+                  ),
+              response_model=sch.Update.Response.Body,
+              dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
+              )
+async def update(id: UUID,
+                 body: sch.Update.Request.Body,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
     '''
     Обновление данных вакансии
     '''
@@ -147,15 +138,15 @@ async def get_list(query: Query = Depends(sch.GetList.Request.Query),
 
 @router.delete('/{id}',
                name='Удаление вакансии',
-                responses=generate_openapi_responses(
-                    exc.InvalidRequestError,
-                    exc.InvalidTokenError,
-                    exc.ExpiredTokenError,
-                    exc.InvalidClientError
-                    ),
-                response_model=sch.Delete.Response.Body,
-                dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
-                )
+               responses=generate_openapi_responses(
+                   exc.InvalidRequestError,
+                   exc.InvalidTokenError,
+                   exc.ExpiredTokenError,
+                   exc.InvalidClientError
+                   ),
+               response_model=sch.Delete.Response.Body,
+               dependencies=[Depends(CheckRoles(Roles.manager, Roles.recruiter, Roles.admin))]
+               )
 async def delete(id: UUID,
                  session: AsyncSession = Depends(get_session),
                  at: AccessToken = Depends(AccessJWTCookie())):

@@ -8,16 +8,16 @@ from fastapi import (
 )
 
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import exc as sa_exc
+from sqlalchemy.orm import selectinload
 from sqlalchemy import delete, update
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-from sqlalchemy.orm import exc as sa_exc
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from .. import config
-from ..service import models as m
-from ..service import exceptions as exc
 from ..service.fastapi_custom import generate_openapi_responses
+from ..service import exceptions as exc
+from ..service import models as m
+from .. import config
 from ..service.dependencies import (
     AccessJWTCookie,
     RefreshUUIDCookie,
@@ -46,7 +46,6 @@ router = APIRouter(tags=['sessions'], prefix='/session')
 async def protected(request: Request,
                     at: AccessToken = Depends(AccessJWTCookie()),
                     rt: RefreshToken = Depends(RefreshUUIDCookie())):
-    
     
     return 'welcome 2z club body'
 

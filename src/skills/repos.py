@@ -1,8 +1,8 @@
 from uuid import UUID
 import typing as tp
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from ..service import models as m
@@ -25,8 +25,11 @@ class SkillsRepo:
             skills_for_insert.append(skill_dict)
             
         stmt = insert(m.Skill).values(skills_for_insert)
-        stmt = stmt.on_conflict_do_update(index_elements=[m.Skill.normalized_name], set_=dict(normalized_name=stmt.excluded.normalized_name)) \
+        stmt = stmt \
+               .on_conflict_do_update(index_elements=[m.Skill.normalized_name],
+                                      set_=dict(normalized_name=stmt.excluded.normalized_name)) \
                .returning(m.Skill.id)
+        
         stmt = select(m.Skill.id).from_statement(stmt).execution_options(populate_existing=True)
         res = await self._session.execute(stmt)   
         skill_ids = res.scalars().all()

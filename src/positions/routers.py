@@ -4,27 +4,25 @@ from fastapi import (
     Depends
 )
 
-from sqlalchemy.future import select
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import insert as _insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select as _select
+from sqlalchemy import delete as _delete
 from sqlalchemy.orm import exc as sa_exc
 
+from ..service.fastapi_custom import generate_openapi_responses
+from ..service.pd_models import position
+from ..service import exceptions as exc
 from ..service import models as m
 from ..service.dependencies import (
     AccessJWTCookie,
     get_session
 )
-
-from . import schemas as sch
 from ..service.tokens import (
     AccessToken,
 )
 
-from ..service import exceptions as exc
-from ..service.fastapi_custom import generate_openapi_responses
-
-from ..service.pd_models import position
+from . import schemas as sch
 
 
 router = APIRouter(tags=['positions'], prefix='/positions')
@@ -37,19 +35,15 @@ router = APIRouter(tags=['positions'], prefix='/positions')
                  exc.ExpiredTokenError,
                  exc.InvalidClientError
                  ),
-             response_model=sch.GetCompanyPositions.Response.Body
+             response_model=sch.GetList.Response.Body
              )
-async def get_company_positions(session: AsyncSession = Depends(get_session),
-                                at: AccessToken = Depends(AccessJWTCookie())):
+async def get_list(session: AsyncSession = Depends(get_session),
+                   at: AccessToken = Depends(AccessJWTCookie())):
     
-    stmt = select(m.User.company_id).where(m.User.id == at.user_id)
+    stmt = _select(m.Position).where(m.Position.company_id == at.company_id)
     res = await session.scalars(stmt)
-    company_id = res.one()
-    
-    res = await session.scalars(select(m.Position).where(m.Position.company_id == company_id))
-    return sch.GetCompanyPositions.Response.Body(
-        positions=[position.Read.from_orm(orm_model) for orm_model in res.all()]
-    )
+    positions = [position.Read.from_orm(orm_model) for orm_model in res.all()]
+    return sch.GetList.Response.Body(positions=positions)
 
 
 @router.post('',
@@ -59,15 +53,15 @@ async def get_company_positions(session: AsyncSession = Depends(get_session),
                  exc.ExpiredTokenError,
                  exc.InvalidClientError
                  ),
-             response_model=sch.CreateCompanyPosition.Response.Body
+             response_model=sch.Create.Response.Body
              )
-async def create_company_position(body: sch.CreateCompanyPosition.Request.Body,
-                                  session: AsyncSession = Depends(get_session),
-                                  at: AccessToken = Depends(AccessJWTCookie())):
+async def create(body: sch.Create.Request.Body,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
     
-    stmt = insert(m.Position).values(company_id=at.company_id, **body.dict()).returning(m.Position.id)
-    res = await session.execute(stmt)
-    return sch.CreateCompanyPosition.Response.Body(id=res.scalars().one())
+    stmt = _insert(m.Position).values(company_id=at.company_id, **body.dict()).returning(m.Position.id)
+    position_id = await session.scalar(stmt)
+    return sch.Create.Response.Body(id=position_id)
 
 
 @router.delete('/{id}',
@@ -77,21 +71,20 @@ async def create_company_position(body: sch.CreateCompanyPosition.Request.Body,
                    exc.ExpiredTokenError,
                    exc.InvalidClientError
                    ),
-               response_model=sch.DeleteCompanyPosition.Response.Body
+               response_model=sch.Delete.Response.Body
                )
-async def delete_company_position(id: UUID,
-                                  session: AsyncSession = Depends(get_session),
-                                  at: AccessToken = Depends(AccessJWTCookie())):
+async def delete(id: UUID,
+                 session: AsyncSession = Depends(get_session),
+                 at: AccessToken = Depends(AccessJWTCookie())):
     
-    stmt = delete(m.Position).where(
-        (m.Position.id == id) 
-        &
-        (m.Position.company_id == at.company_id)
-    ).returning(m.Position.id)
-    res = await session.execute(stmt)
+    stmt = _delete(m.Position) \
+        .where(m.Position.id == id) \
+        .where(m.Position.company_id == at.company_id) \
+        .returning(m.Position.id)
+
     try:
-        position_id = res.scalars().one()
+        position_id = (await session.scalars(stmt)).one()
     except sa_exc.NoResultFound:
         raise exc.InvalidClientError
-    return sch.DeleteCompanyPosition.Response.Body(id=position_id)
-
+    
+    return sch.Delete.Response.Body(id=position_id)

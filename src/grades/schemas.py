@@ -1,17 +1,18 @@
-from pydantic import BaseModel
-import typing as tp
 from uuid import UUID
+import typing as tp
+
+from pydantic import BaseModel
 
 from ..service.pd_models import grade
 
 
-class GetCompanyGrades:
+class GetList:
     class Response:
         class Body(BaseModel):
             grades: tp.List[grade.Read]
             
             
-class CreateCompanyGrade:
+class Create:
     class Request:
         class Body(grade.Create):
             ...
@@ -21,7 +22,7 @@ class CreateCompanyGrade:
             id: UUID
             
             
-class DeleteCompanyGrade:
+class Delete:
     class Response:
         class Body(BaseModel):
             id: UUID

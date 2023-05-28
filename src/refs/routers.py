@@ -3,22 +3,21 @@ from fastapi import (
     Depends
 )
 
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
+from ..service.fastapi_custom import generate_openapi_responses
+from ..service import exceptions as exc
 from ..service import models as m
 from ..service.dependencies import (
     AccessJWTCookie,
     get_session
 )
-
-from . import schemas as sch
 from ..service.tokens import (
     AccessToken,
 )
 
-from ..service import exceptions as exc
-from ..service.fastapi_custom import generate_openapi_responses
+from . import schemas as sch
 
 
 router = APIRouter(tags=['refs'], prefix='/refs')

@@ -1,6 +1,6 @@
-import pydantic as pd
-from uuid import UUID
 import typing as tp
+
+import pydantic as pd
 
 
 class Ref(pd.BaseModel):
@@ -27,4 +27,3 @@ class GetRefsResponse(pd.BaseModel):
     
 class GetRolesResponse(pd.BaseModel):
     roles: tp.List[RoleRef]
-    

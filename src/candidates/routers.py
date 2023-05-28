@@ -57,7 +57,10 @@ async def create(body: sch.Create.Request.Body,
     '''
     
     candidates_repo = CandidatesRepo(session)
-    candidate_id = await candidates_repo.add(at.user_id, body)
+    try:
+        candidate_id = await candidates_repo.add(at.user_id, body)
+    except sa_exc.IntegrityError:
+        raise exc.InvalidClientError
     
     return sch.Create.Response.Body(id=candidate_id)
 

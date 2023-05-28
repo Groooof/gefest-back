@@ -120,7 +120,7 @@ class Department(Base):
     name = sa.Column(sa.String, nullable=False)
     company_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('companies.id'), nullable=False)
     
-    company = relationship('Company',)
+    company = relationship('Company', lazy='selectin')
     
 
 class Position(Base):
@@ -130,7 +130,7 @@ class Position(Base):
     name = sa.Column(sa.String, nullable=False)
     company_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('companies.id'), nullable=False)
     
-    company = relationship('Company',)    
+    company = relationship('Company', lazy='selectin')    
 
     
 class Grade(Base):
@@ -140,7 +140,7 @@ class Grade(Base):
     name = sa.Column(sa.String, nullable=False)
     company_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('companies.id'), nullable=False)
     
-    company = relationship('Company',)
+    company = relationship('Company', lazy='selectin')
     
     
 class User(Base):
@@ -163,12 +163,12 @@ class User(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     logged_in_at = sa.Column(sa.DateTime)
     
-    role = relationship('RoleRef',)
-    company = relationship('Company',)
-    department = relationship('Department',)
-    position = relationship('Position',)
-    grade = relationship('Grade',)
-    creator = relationship('User',)
+    role = relationship('RoleRef', lazy='selectin')
+    company = relationship('Company', lazy='selectin')
+    department = relationship('Department', lazy='selectin')
+    position = relationship('Position', lazy='selectin')
+    grade = relationship('Grade', lazy='selectin')
+    creator = relationship('User', lazy='selectin')
     
     
 class RefreshToken(Base):
@@ -178,7 +178,7 @@ class RefreshToken(Base):
     expires_at = sa.Column(sa.DateTime, nullable=False)
     user_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('users.id'))
     
-    user = relationship('User',)
+    user = relationship('User', lazy='selectin')
     
     
 class Skill(Base):
@@ -189,7 +189,7 @@ class Skill(Base):
     normalized_name = sa.Column(sa.String, nullable=False, unique=True)
     company_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('companies.id'), nullable=False)
     
-    company = relationship('Company',)
+    company = relationship('Company', lazy='selectin')
     
     
 class DepartmentSkill(Base):
@@ -203,9 +203,9 @@ class DepartmentSkill(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    skill = relationship('Skill',)
-    department = relationship('Department',)
-    creator = relationship('User',)
+    skill = relationship('Skill', lazy='selectin')
+    department = relationship('Department', lazy='selectin')
+    creator = relationship('User', lazy='selectin')
     
     
 class Vacancy(Base):
@@ -233,12 +233,12 @@ class Vacancy(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    department = relationship('Department')
-    position = relationship('Position')
-    grade = relationship('Grade')
-    priority = relationship('VacancyPriorityRef')
-    adress = relationship('AdressRef')
-    skills = relationship('VacancySkill')
+    department = relationship('Department', lazy='selectin')
+    position = relationship('Position', lazy='selectin')
+    grade = relationship('Grade', lazy='selectin')
+    priority = relationship('VacancyPriorityRef', lazy='selectin')
+    adress = relationship('AdressRef', lazy='selectin')
+    skills = relationship('VacancySkill', lazy='selectin')
     # recruiter = relationship('User', primaryjoin = 'Vacancy.recruiter_id == User.id')
     creator = relationship('User', primaryjoin = 'Vacancy.creator_id == User.id')
     
@@ -255,8 +255,7 @@ class VacancySkill(Base):
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
     skill = relationship('Skill', lazy='selectin')
-    vacancy = relationship('Vacancy',)
-    creator = relationship('User',)
+    creator = relationship('User', lazy='selectin')
     
     
 class File(Base):
@@ -297,17 +296,17 @@ class Candidate(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    position = relationship('Position',)
-    grade = relationship('Grade',)
-    adress = relationship('AdressRef',)
-    citizenship = relationship('CountryRef')
-    family_status = relationship('FamilyStatusRef')
-    contacts = relationship('CandidateContact',)
-    languages = relationship('CandidateLanguageAbility',)
-    notes = relationship('CandidateNote')
-    skills = relationship('CandidateSkill')
-    work_places = relationship('CandidateWorkPlace')
-    creator = relationship('User')
+    position = relationship('Position', lazy='selectin')
+    grade = relationship('Grade', lazy='selectin')
+    adress = relationship('AdressRef', lazy='selectin')
+    citizenship = relationship('CountryRef', lazy='selectin')
+    family_status = relationship('FamilyStatusRef', lazy='selectin')
+    contacts = relationship('CandidateContact', lazy='selectin')
+    languages = relationship('CandidateLanguageAbility', lazy='selectin')
+    notes = relationship('CandidateNote', lazy='selectin')
+    skills = relationship('CandidateSkill', lazy='selectin')
+    work_places = relationship('CandidateWorkPlace', lazy='selectin')
+    creator = relationship('User', lazy='selectin')
     
     
 class CandidateContact(Base):
@@ -324,7 +323,7 @@ class CandidateContact(Base):
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
     type = relationship('ContactTypeRef', lazy='selectin')
-    creator = relationship('User',)
+    creator = relationship('User', lazy='selectin')
 
 
 class CandidateWorkPlace(Base):
@@ -342,7 +341,7 @@ class CandidateWorkPlace(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    creator = relationship('User',)
+    creator = relationship('User', lazy='selectin')
 
 
 class CandidateLanguageAbility(Base):
@@ -359,7 +358,7 @@ class CandidateLanguageAbility(Base):
 
     language = relationship('LanguageRef', lazy="selectin")
     language_level = relationship('LanguageLevelRef', lazy="selectin")
-    creator = relationship('User',)
+    creator = relationship('User', lazy='selectin')
 
 
 class CandidateNote(Base):
@@ -373,7 +372,7 @@ class CandidateNote(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    creator = relationship('User',)
+    creator = relationship('User', lazy='selectin')
 
 
 class CandidateSkill(Base):
@@ -388,7 +387,7 @@ class CandidateSkill(Base):
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
     skill = relationship('Skill', lazy='selectin')
-    creator = relationship('User',)
+    creator = relationship('User', lazy='selectin')
 
 
 class Interview(Base):
@@ -403,27 +402,26 @@ class Interview(Base):
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
 
-    candidate = relationship('Candidate',)
-    vacancy = relationship('Vacancy',)
-    stage = relationship('InterviewStageRef',)
-    creator = relationship('User',)
+    candidate = relationship('Candidate', lazy='joined')
+    vacancy = relationship('Vacancy', lazy='joined')
+    stage = relationship('InterviewStageRef', lazy='joined')
+    creator = relationship('User', lazy='joined')
 
 
-class InterviewEvent(Base):
-    __tablename__ = 'interview_events'
-    __table_args__ = (
-        sa.CheckConstraint('planned_at >= created_at'),
-        )
+class InterviewStageResult(Base):
+    __tablename__ = 'interview_stage_results'
     
     id = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=sa.text("gen_random_uuid()"))
     interview_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('interviews.id'), nullable=False)
-    planned_at = sa.Column(sa.DateTime, nullable=False)
+    interview_stage_code_old = sa.Column(sa.Integer, sa.ForeignKey('interview_stages_ref.code'), nullable=False)
+    interview_stage_code_new = sa.Column(sa.Integer, sa.ForeignKey('interview_stages_ref.code'), nullable=False)
+    note = sa.Column(sa.String, nullable=False)
     creator_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey('users.id'))
     created_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now())
     updated_at = sa.Column(sa.DateTime, server_default=sa.sql.func.now(), onupdate=sa.sql.func.now())
     is_deleted = sa.Column(sa.Boolean, server_default=sa.text('False'), nullable=False)
-
-    interview = relationship('Interview',)
-    creator = relationship('User',)
     
-    
+    interview = relationship('Interview', lazy='selectin')
+    interview_stage_old = relationship('InterviewStageRef', primaryjoin = 'InterviewStageResult.interview_stage_code_old == InterviewStageRef.code', lazy='selectin')
+    interview_stage_new = relationship('InterviewStageRef', primaryjoin = 'InterviewStageResult.interview_stage_code_new == InterviewStageRef.code', lazy='selectin')
+    creator = relationship('User', lazy='selectin')

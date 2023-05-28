@@ -111,7 +111,7 @@ INSERT INTO contact_types_ref (code,value,is_archive) VALUES (1,'Мобильн�
 INSERT INTO contact_types_ref (code,value,is_archive) VALUES (2,'Домашний телефон',FALSE) ON CONFLICT DO NOTHING;
 INSERT INTO contact_types_ref (code,value,is_archive) VALUES (3,'Email',FALSE) ON CONFLICT DO NOTHING;
 INSERT INTO contact_types_ref (code,value,is_archive) VALUES (4,'Telegram',FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO contact_types_ref (code,value,is_archive) VALUES (5,'WatsApp',FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO contact_types_ref (code,value,is_archive) VALUES (5,'WhatsApp',FALSE) ON CONFLICT DO NOTHING;
 INSERT INTO contact_types_ref (code,value,is_archive) VALUES (6,'Viber',FALSE) ON CONFLICT DO NOTHING;
 
 INSERT INTO languages_ref (code,value,is_archive) VALUES (1,'Русский',FALSE) ON CONFLICT DO NOTHING;
@@ -127,17 +127,16 @@ INSERT INTO language_levels_ref (code,level_code,value,is_archive) VALUES (4,'B2
 INSERT INTO language_levels_ref (code,level_code,value,is_archive) VALUES (5,'C1','Продвинутый',FALSE) ON CONFLICT DO NOTHING;
 INSERT INTO language_levels_ref (code,level_code,value,is_archive) VALUES (6,'C2','Профессиональный',FALSE) ON CONFLICT DO NOTHING;
 
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (1,'В работе',NULL,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (2,'Завершен',NULL,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (3,'Новый',NULL,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (4,'HR собеседование',1,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (5,'Техническое собеседование',1,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (6,'Тестовое задание',1,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (7,'Принятие решения',1,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (8,'Оффер',1,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (9,'Отказ кандидата',1,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (10,'Отказ компании',2,FALSE) ON CONFLICT DO NOTHING;
-INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (11,'Оффер принят',2,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (1,'Новый',NULL,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (2,'В работе',NULL,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (3,'Завершен',NULL,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (4,'HR собеседование',2,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (5,'Техническое собеседование',2,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (6,'Принятие решения',2,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (7,'Оффер',2,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (8,'Отказ кандидата',3,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (9,'Отказ компании',3,FALSE) ON CONFLICT DO NOTHING;
+INSERT INTO interview_stages_ref (code,value,parent_id,is_archive) VALUES (10,'Оффер принят',3,FALSE) ON CONFLICT DO NOTHING;
 
 INSERT INTO vacancy_stats_ref (code,value,is_archive) VALUES (1,'Заявка',FALSE) ON CONFLICT DO NOTHING;
 INSERT INTO vacancy_stats_ref (code,value,is_archive) VALUES (2,'В работе',FALSE) ON CONFLICT DO NOTHING;
